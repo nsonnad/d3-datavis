@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SE Asia</title>
+    <script type="text/javascript" src="d3/d3.v2.js"></script>
+    <style type="text/css">
+    body {width:700px;}
+    
+    #wrapper {width:100%; border: solid 1px #ccc; }
+    
+    svg {
+  width: 500px;
+  height: 500px;
+  font: 10px sans-serif;
+  shape-rendering: crispEdges;
+  float:left;
+}
+    #key {
+    margin-left:5px;
+    float:left;
+    width:180px;
+    height:500px;
+    font-family:georgia;
+    }
+    
+    #key ul { list-style-type:none; font-size:1.6em; line-height:2em;}
+    
+    .indo {fill:#f57900;}
+    .thai {fill:#3465a4;}
+    .phil {fill:#edd400;}
+    .malay {fill:#ef2929;}
+    .viet {fill:#73d216;}
+    
+    .x.label{font-size:1.8em; font-family:georgia;}
+    
+    .tooltip {width: 80px; background-color:#eee; padding:7px; font-family:georgia;
+                opacity:0.9; box-shadow: 4px 4px 5px #babdb6;}
+
+    </style>
+  </head>
+  <body>
+  <h3>Population of Southeast Asian immigrants in East Asia, by country</h3>
+    <script type="text/javascript">
+	
+	var w = 420,
+		h = 450,
+		p = [30, 10, 0, 10],
+		x = d3.scale.ordinal().rangeRoundBands([0, w - p[1] - p[3]]),
+        y = d3.scale.linear().range([0, h - p[0] - p[2]]),
+        //z = d3.scale.ordinal().range(["lightpink", "darkgray", "lightblue"]);
+        z = d3.scale.ordinal().range(["indo", "thai", "phil", "malay", "viet"]);
+		
+	var svg = d3.select("body").append("svg:svg")
+			    .attr("width", w)
+			    .attr("height", h)
+			    .append("svg:g")
+			    .attr("transform", "translate(" + p[3] + "," + (h - p[2]) + ")");
+			
+	
+	d3.csv("asian-migrants.csv", function(migrate) {
+	
+var migrants = d3.layout.stack()(["Indonesia", "Thailand", "Philippines", "Malaysia", "Vietnam"].map(function(popul) {
+			return migrate.map(function(d, i) {
+				return {x: d["country"], y: +d[popul]}
+			});
+		}));
+		
+		
+	x.domain(migrants[0].map(function(d) { return d.x; }));
+	y.domain([0, d3.max(migrants[migrants.length - 1], function(d) { return d.y0 + d.y; })]);
+	
+	console.log(migrate)
+	console.log(migrants)
+	console.log(y.domain())
+	
+	d3.helper = {};
+
+    d3.helper.tooltip = function(accessor){
+        return function(selection){
+            var tooltipDiv;
+            var bodyNode = d3.select('body').node();
+            selection.on("mouseover", function(d, i){
+                // Clean up lost tooltips
+                d3.select('body').selectAll('div.tooltip').remove();
+                // Append tooltip
+                tooltipDiv = d3.select('body').append('div').attr('class', 'tooltip');
+                var absoluteMousePos = d3.mouse(bodyNode);
+                tooltipDiv.style('left', (absoluteMousePos[0] + 10)+'px')
+                    .style('top', (absoluteMousePos[1] - 15)+'px')
+                    .style('position', 'absolute') 
+                    .style('z-index', 1001);
+                // Add text using the accessor function
+                var tooltipText = accessor(d, i) || '';
+                // Crop text arbitrarily
+                tooltipDiv.style('width', function(d, i){return (tooltipText.length > 80) ? '300px' : null;})
+                    .html(tooltipText);
+            })
+            .on('mousemove', function(d, i) {
+                // Move tooltip
+                var absoluteMousePos = d3.mouse(bodyNode);
+                tooltipDiv.style('left', (absoluteMousePos[0] + 10)+'px')
+                    .style('top', (absoluteMousePos[1] - 15)+'px');
+                var tooltipText = accessor(d, i) || '';
+                tooltipDiv.html(tooltipText);
+            })
+            .on("mouseout", function(d, i){
+                // Remove tooltip
+                tooltipDiv.remove();
+            });
+
+        };
+    };
+    
+	
+	var xlabel = function(d){return d;};
+	var tip_y = d3.format(",")
+	
+	var popul = svg.selectAll("g.popul")
+	    .data(migrants)
+	    .enter().append("svg:g")
+	    //.attr("class", "migrate")
+	    //.style("fill", function(d, i) { return z(i); });
+	    .attr("class", function (d, i) { return z(i); });
+	    
+    var rect = popul.selectAll("rect")
+                .data(Object)
+                .enter().append("svg:rect")
+                .attr("x", function(d) { return x(d.x) + 15; })
+                .attr("y", function(d) { return -y(d.y0) - y(d.y); })
+                .attr("height", function(d) { return y(d.y); })
+                .attr("width", 100)
+                .call(d3.helper.tooltip(function(d){return tip_y(+d.y)}));
+            
+            
+               
+    var label = svg.selectAll("text")
+      .data(x.domain())
+    .enter().append("svg:text")
+      .attr("x", function(d) { return x(d) + x.rangeBand() / 2; })
+      .attr("y", 6)
+      .attr("text-anchor", "middle")
+      .attr("dy", ".71em")
+      .attr("class", "x label")
+      .text(xlabel);
+      
+      //.text(xlabel);
+                
+    var rule = svg.selectAll("g.rule")
+      .data(y.ticks(5))
+    .enter().append("svg:g")
+      .attr("class", "rule")
+      .attr("transform", function(d) { return "translate(0," + -y(d) + ")"; });
+
+  rule.append("svg:line")
+      .attr("x2", w - p[1] - p[3])
+      .style("stroke", function(d) { return d ? "#888a85" : "#000"; })
+      .style("stroke-opacity", function(d) { return d ? .3 : null; });
+                
+    rule.append("svg:text")
+      .attr("x", w - p[1] - p[3] + 6)
+      .attr("dy", ".35em")
+      .text(d3.format(",d"));
+      
+	})
+	</script>
+	<div id="key">
+	<ul>
+	    <li style="color:#73d216">Vietnam</li>
+	    <li style="color:#ef2929">Malaysia</li>
+	    <li style="color:#edd400">Philippines</li>
+	    <li style="color:#3465a4">Thailand</li>
+	    <li style="color:#f57900">Indonesia</li>
+    </ul>
+    </div>    
+  </body>
+</html>
