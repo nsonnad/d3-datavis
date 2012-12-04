@@ -1,0 +1,1 @@
+Used d3's stacked bar chart layout to show the number of Southeast Asian foreign residents living in East Asian democracies (South Korea, Japan and Taiwan). Part of the goal was to show the relatively large migrant population in Taiwan.
