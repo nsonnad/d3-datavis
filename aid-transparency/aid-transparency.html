@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Aid and transparency</title>
+    <script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
+    <style type="text/css">
+    body { font: 11px sans-serif;}
+    
+    .axis path,
+    .axis line { fill: none; stroke: #000; shape-rendering: crispEdges;}
+    .label { color:green; }
+      
+    </style>
+</head>
+<body>
+<script type="text/javascript">
+     var margin = {top: 20, right: 20, bottom: 80, left: 80},
+        w = 660 - margin.left - margin.right,
+        h = 5500 - margin.top - margin.bottom,
+        x = d3.scale.linear().range([0, w]),
+        y = d3.scale.ordinal().rangeRoundBands([0, h], 0);
+        
+     var svg = d3.select("body").append("svg")
+        .attr("width", w + margin.left + margin.right)
+        .attr("height", h + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+    var xAxis = d3.svg.axis()
+        .scale(x)
+       .orient("top");
+       
+    svg.append("g")
+      .attr("class", "x axis");
+      
+    svg.append("g")
+    .attr("class", "y axis")
+  .append("line")
+    .attr("class", "domain")
+    .attr("y2", h);
+
+        
+  d3.csv("aid-transparency.csv", function(csv) {
+  
+    csv.forEach(function(d) {
+        d.aid = +d.aid
+        d.trans = +d.trans
+        d.internet = +d.internet;
+    });
+    ;
+  
+    
+    var color = d3.scale.linear()
+        .domain([d3.min(csv, function(d) { return d.trans; }), d3.max(csv, function(d) { return d.trans; })])
+        .interpolate(d3.interpolateHsl)
+        .range(["#ea0000", "#0066ff"]);
+        
+    var widthScale = d3.scale.linear()
+        .domain([d3.min(csv, function(d) { return d.internet; }), d3.max(csv, function(d) { return d.internet; })])
+        .range([12, 40]);
+  
+      console.log(widthScale.domain())
+            
+    x.domain([0, d3.max(csv, function(d) { return d.aid; })]);
+    y.domain(csv.map(function(d) { return d.country; }));    
+      
+    
+        
+        var rect = svg.selectAll(".rects")
+            .data(csv, function(d) { return d.country; })
+            
+        var rectEnter = rect.enter().insert("g", ".axis")
+         //   .datum(function(d, i) { return {country: d.country, pad: widthScale(d.internet[i - 1])}; })
+            .attr("transform", function(d) { return "translate(0," + y(d.country) + ")"; })
+         //   .attr("transform", function(d) { return "translate(0," + widthScale(d.internet) + ")"; }) 
+            .attr("class", "rects")
+           // .attr("y", function(d) { return widthScale(d.internet); })
+    
+    
+        rectEnter.append("rect")   
+//           .attr("y", function(d) { return y(d.country); })
+           // .attr("height", function(d) { return h - x(d.aid); })
+            .attr({
+                height: function(d) { return widthScale(d.internet); },
+                width: function(d) { return x(d.aid); },
+                fill: function(d, i) { return color(d.trans); }
+                });
+         //   .attr("x", 0);
+         
+        rectEnter.append("text")
+        .attr("class", "label")
+            .attr("x", -3)
+            .attr("y", function(d) { return widthScale(d.internet) / 2; })
+            .attr("dy", ".35em")
+            .attr("text-anchor", "end")
+            .text(function(d) { return d.country; });
+        
+                    
+        svg.select(".x.axis")
+        .call(xAxis);            
+  })
+
+
+
+</script>
+
+</body>
+</html>
