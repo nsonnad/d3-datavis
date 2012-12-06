@@ -3,22 +3,61 @@
   <head>
     <title>Aid and transparency</title>
     <script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
-    <style type="text/css">
-    body { font: 11px sans-serif;}
     
+<style type="text/css">
+
+    body { font: 11px sans-serif;}
+
     .axis path,
     .axis line { fill: none; stroke: #000; shape-rendering: crispEdges;}
     .label { color:green; }
+
+    #menuWrap {
+        padding:10px;
+        background:#eeeeec;
+        position: fixed;
+        top: 30px;
+        right: 30px; }
       
-    </style>
+    .menus {
+        font-size: 13px;
+        width:200px;
+        float:left;
+        display: block; }
+        
+    h1 { font-size: 15px; font-weight: bold;}
+
+</style>
+
 </head>
+
 <body>
+
+<div id="menuWrap">
+    <div class="menus">
+    <form id="sort">
+        <h1>Sort data by:</h1>
+        <label><input type="radio" name="sorter" value="name" checked> Country name</label><br />
+        <label><input type="radio" name="sorter" value="aid"> Foreign aid received</label><br />
+        <label><input type="radio" name="sorter" value="trans"> Corruption index rating</label><br />
+        <label><input type="radio" name="sorter" value="internet"> Internet use per 100 people</label>
+        </form>
+    </div>
+    
+    <div class="menus">
+        <form id="coloration">
+        <h1>Coloration reflects:</h1>
+        <label><input type ="radio" name="color" value="trans" checked>Corruption index rating</label><br />
+        <label><input type ="radio" name="color" value="internet">Internet use per 100 people</label>
+        </form>
+    </div>
+
 <script type="text/javascript">
-     var margin = {top: 20, right: 20, bottom: 80, left: 80},
+     var margin = {top: 20, right: 20, bottom: 80, left: 120},
         w = 660 - margin.left - margin.right,
-        h = 5500 - margin.top - margin.bottom,
+        h = 4000 - margin.top - margin.bottom,
         x = d3.scale.linear().range([0, w]),
-        y = d3.scale.ordinal().rangeRoundBands([0, h], 0);
+        y = d3.scale.ordinal().rangeRoundBands([0, h], .05);
         
      var svg = d3.select("body").append("svg")
         .attr("width", w + margin.left + margin.right)
@@ -29,6 +68,8 @@
     var xAxis = d3.svg.axis()
         .scale(x)
        .orient("top");
+       
+   var radio;
        
     svg.append("g")
       .attr("class", "x axis");
@@ -47,62 +88,104 @@
         d.trans = +d.trans
         d.internet = +d.internet;
     });
-    ;
-  
     
-    var color = d3.scale.linear()
+    var colorTrans = d3.scale.linear()
         .domain([d3.min(csv, function(d) { return d.trans; }), d3.max(csv, function(d) { return d.trans; })])
         .interpolate(d3.interpolateHsl)
         .range(["#ea0000", "#0066ff"]);
-        
-    var widthScale = d3.scale.linear()
+    
+    var colorInter = d3.scale.linear()
         .domain([d3.min(csv, function(d) { return d.internet; }), d3.max(csv, function(d) { return d.internet; })])
-        .range([12, 40]);
-  
-      console.log(widthScale.domain())
-            
+        .interpolate(d3.interpolateHsl)
+        .range(["#ad7fa8", "#73d216"]);
+    
+          
     x.domain([0, d3.max(csv, function(d) { return d.aid; })]);
     y.domain(csv.map(function(d) { return d.country; }));    
       
-    
         
         var rect = svg.selectAll(".rects")
             .data(csv, function(d) { return d.country; })
             
         var rectEnter = rect.enter().insert("g", ".axis")
          //   .datum(function(d, i) { return {country: d.country, pad: widthScale(d.internet[i - 1])}; })
-            .attr("transform", function(d) { return "translate(0," + y(d.country) + ")"; })
+            .attr("transform", function(d, i) { return "translate(0," + y(d.country) + ")"; })
          //   .attr("transform", function(d) { return "translate(0," + widthScale(d.internet) + ")"; }) 
             .attr("class", "rects")
-           // .attr("y", function(d) { return widthScale(d.internet); })
+          //  .attr("y", function(d) { return (y(d.country + widthScale(d.internet))); })
     
     
         rectEnter.append("rect")   
 //           .attr("y", function(d) { return y(d.country); })
            // .attr("height", function(d) { return h - x(d.aid); })
             .attr({
-                height: function(d) { return widthScale(d.internet); },
+            //    height: function(d) { return widthScale(d.internet); },
+                height: y.rangeBand(),
                 width: function(d) { return x(d.aid); },
-                fill: function(d, i) { return color(d.trans); }
+                fill: function(d, i) { return colorTrans(d.trans); }
                 });
          //   .attr("x", 0);
-         
+        
         rectEnter.append("text")
         .attr("class", "label")
             .attr("x", -3)
-            .attr("y", function(d) { return widthScale(d.internet) / 2; })
+          //  .attr("y", function(d) { return widthScale(d.internet) / 2; })
+            .attr("y", y.rangeBand() / 2)
             .attr("dy", ".35em")
             .attr("text-anchor", "end")
             .text(function(d) { return d.country; });
         
-                    
-        svg.select(".x.axis")
-        .call(xAxis);            
-  })
+    svg.select(".x.axis")
+        .call(xAxis);  
+        
+    d3.selectAll("#sort input").on("change", changeSort);
+    d3.selectAll("#coloration input").on("change", changeColor); 
+    
+      
+         
+    function changeSort() {
+    var ySort;
+        if (this.value === "internet") {
+            ySort = y.domain(csv.sort(function(a, b) { return d3.ascending(a.internet, b.internet); })
+            .map(function(d) { return d.country; }))
+            } 
+        else if (this.value === "aid") {
+            ySort = y.domain(csv.sort(function(a, b) { return d3.descending(a.aid, b.aid); })
+            .map(function(d) { return d.country; }))
+            }
+        else if (this.value === "trans") {
+            ySort = y.domain(csv.sort(function(a, b) { return d3.ascending(a.trans, b.trans); })
+            .map(function(d) { return d.country; }))
+            }
+        else { ySort = y.domain(csv.sort(function(a, b) { return d3.ascending(a.country, b.country); })
+        .map(function(d) { return d.country; }))
+            }
+
+    var transition = svg.transition().duration(400),
+        delay = function(d, i) { return i * 15; };
+
+    transition.selectAll(".rects")
+    .delay(delay)
+    .attr("transform", function(d, i) { return "translate(0," + ySort(d.country) + ")"; });
+        
+    transition.select(".y.axis")
+    .selectAll("g")
+    .delay(delay);
+    };
+        
+    function changeColor() {
+        if (this.value === "internet") {
+            svg.selectAll("rect")
+                .attr("fill", function(d, i) { return colorInter(d.internet); })
+        } else {
+            svg.selectAll("rect")
+                .attr("fill", function(d, i) { return colorTrans(d.trans); })
+            }
+        }; 
+  });
 
 
 
 </script>
-
 </body>
 </html>
