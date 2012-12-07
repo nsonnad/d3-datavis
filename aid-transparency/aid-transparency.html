@@ -1,65 +1,151 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Aid and transparency</title>
+    <title>Foreign aid, corruption and internet use</title>
     <script type="text/javascript" src="http://d3js.org/d3.v2.min.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script src="https://raw.github.com/bigmlcom/tipsy/master/src/javascripts/jquery.tipsy.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="tipsy.css" type="text/css" title="no title" charset="utf-8">
     
 <style type="text/css">
 
-    body { font: 11px sans-serif;}
+    #wrapper { width: 960px; position:relative; margin:0 auto;}
 
+    body { font: 13px sans-serif;}
+    #words { font-size: 18px; width:750px; margin:0 auto; }
+    h1 { font-size: 36px; font-weight: bold;}
+    
+    a:link { text-decoration:none; }
+    a:hover { text-decoration: underline; }
+    
     .axis path,
     .axis line { fill: none; stroke: #000; shape-rendering: crispEdges;}
     .label { color:green; }
-
-    #menuWrap {
-        padding:10px;
-        background:#eeeeec;
-        position: fixed;
-        top: 30px;
-        right: 30px; }
-      
-    .menus {
-        font-size: 13px;
-        width:200px;
-        float:left;
-        display: block; }
+    
+    #content { width:960px; float:left;}
+    #chart { float: left; }
+    
+    #infoWrap {
+        float: right;
+        width:300px;
+        }
         
-    h1 { font-size: 15px; font-weight: bold;}
+    #info { margin-top:25px; }
+    
+    #key {
+        font: 20px sans-serif;
+        font-weight: bold;
+    }
+    
+    #arrow { width:300px;  margin: 0 auto;}
+    
+    #colorLegend { width:300px; }
+        img.gradient { margin-left:35px; margin-top:-16px;}
+    
+    #menuWrap {
+        padding:15px 25px 25px 15px;
+        margin-top:25px;
+        background:#eeeeec;
+        width:200px;
+        }
+    
+    .menus {
+        font-size: 15px;
+        }
+        
+    h2 { font-size: 15px; font-weight: bold;}
+    #footer { width: 850px; margin:0 auto; font-size:16px; padding:12px 0px 18px 0px;}
 
 </style>
+<script>
+$(function() {
+ 
+    var sticky_navigation_offset_top = $('#info').offset().top;
 
+    var sticky_navigation = function(){
+        var scroll_top = $(window).scrollTop(); // our current vertical position from the top
+         
+        if (scroll_top > sticky_navigation_offset_top) { 
+            $('#info').css({ 'position': 'fixed', 'top':0 });
+        } else {
+            $('#info').css({ 'position': 'relative' }); 
+        }   
+    };
+     
+    sticky_navigation();
+     
+    $(window).scroll(function() {
+         sticky_navigation();
+    });
+ 
+});
+</script>
 </head>
-
 <body>
 
-<div id="menuWrap">
-    <div class="menus">
-    <form id="sort">
-        <h1>Sort data by:</h1>
-        <label><input type="radio" name="sorter" value="name" checked> Country name</label><br />
-        <label><input type="radio" name="sorter" value="aid"> Foreign aid received</label><br />
-        <label><input type="radio" name="sorter" value="trans"> Corruption index rating</label><br />
-        <label><input type="radio" name="sorter" value="internet"> Internet use per 100 people</label>
-        </form>
-    </div>
+<div id="wrapper">
+    <div id="words">
+    <h1>Foreign aid, corruption and internet use</h1>
+    <p>The logic of foreign aid is simple: the more money a country is given, the more it will be able to secure the resources it needs to cultivate success that extends into the future. Unfortunately, that simple formula rarely holds true in the real world.</p>
+
+    <p>The chart below shows <a href="http://stats.oecd.org/qwids/">OECD data</a> on the total amount given -- since 1960 -- to every aid recipient country. Two other data points underlie the simple bar graph: the <a href="http://www.transparency.org/cpi2011/">2011 Corruption Perceptions Index</a> produced by Transparency International, and rates of internet use per 100 people, <a href="http://data.worldbank.org/indicator/IT.NET.USER.P2">provided by the World Bank</a> (for 2011 or the bank's most recent figures). You can use the menu below to manipulate how these data points affect the order and coloring of the chart.</p>
     
-    <div class="menus">
-        <form id="coloration">
-        <h1>Coloration reflects:</h1>
-        <label><input type ="radio" name="color" value="trans" checked>Corruption index rating</label><br />
-        <label><input type ="radio" name="color" value="internet">Internet use per 100 people</label>
-        </form>
+    <p>The picture that emerges is one in which the countries that have received greater amounts of aid are more likely to be corrupt and technologically backward. Try, for example, to sort the data by foreign aid received, and color it by the Corruption Perceptions Index. The obvious trend is that a disproportionate number of red (corrupt) countries sit atop this mountain of aid. The same is true for coloring related to internet users per 100 people in the country. One of the most striking examples is South Korea, which despite being given less than US$2 billion since 1960 is ranked second in terms of internet penetration.</p>
+    
+    <p>Internet access and fair government are two things we would have expected to result from significant amounts of aid. In fact, the opposite appears to be the case.</p> 
     </div>
 
-<script type="text/javascript">
-     var margin = {top: 20, right: 20, bottom: 80, left: 120},
-        w = 660 - margin.left - margin.right,
+<div id="content">
+<div id="infoWrap">
+    <div id="info">
+        <div id="key">
+            Beginning of alphabet
+        </div>
+        <div id="arrow">
+            <img src="arrow.png"></img>
+        </div>
+        
+    <div id="menuWrap">
+        <div class="menus">
+        <form id="sort">
+            <h2>Sort data by:</h2>
+            <label><input type="radio" name="sorter" value="name" checked> Country name</label><br />
+            <label><input type="radio" name="sorter" value="aid"> Foreign aid received</label><br />
+            <label><input type="radio" name="sorter" value="trans"> Corruption index</label><br />
+            <label><input type="radio" name="sorter" value="internet"> Internet access</label>
+            </form>
+        </div>
+        <br />
+        <div class="menus">
+            <form id="coloration">
+            <h2>Coloration reflects:</h2>
+            <label><input type ="radio" name="color" value="none" checked>None</label><br />
+            <label><input type ="radio" name="color" value="trans">Corruption index</label><br />
+            <label><input type ="radio" name="color" value="internet">Internet access</label>
+            </form>
+            <div id="colorLegend">
+            <span class="legends" id="colorTrans" style="display:none"><p>More corrupt</p>
+            <img class="gradient" src="trans-gradient.png"></img></span>
+            
+            <span class="legends" id="colorInter" style="display:none"><p>Less internet</p>
+            <img class="gradient" src="internet-gradient.png"></img></span>
+    </div>
+    
+    </div>
+    </div>
+</div>
+</div>
+    
+<div id="chart">
+    <script type="text/javascript">
+    var margin = {top: 40, right: 20, bottom: 80, left: 140},
+        w = 580 - margin.left - margin.right,
         h = 4000 - margin.top - margin.bottom,
         x = d3.scale.linear().range([0, w]),
-        y = d3.scale.ordinal().rangeRoundBands([0, h], .05);
+        y = d3.scale.ordinal().rangeRoundBands([0, h], .05)
+        currFormat = d3.format(",.0f");
         
-     var svg = d3.select("body").append("svg")
+    var svg = d3.select("#chart").append("svg")
         .attr("width", w + margin.left + margin.right)
         .attr("height", h + margin.top + margin.bottom)
         .append("g")
@@ -69,19 +155,24 @@
         .scale(x)
        .orient("top");
        
-   var radio;
-       
     svg.append("g")
       .attr("class", "x axis");
       
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "end")
+        .attr("x", w)
+        .attr("y", 20)
+        .text("Total foreign aid received since 1960 (1m US dollars)")
+      
     svg.append("g")
     .attr("class", "y axis")
-  .append("line")
+    .append("line")
     .attr("class", "domain")
     .attr("y2", h);
-
+    
         
-  d3.csv("aid-transparency.csv", function(csv) {
+d3.csv("aid-transparency.csv", function(csv) {
   
     csv.forEach(function(d) {
         d.aid = +d.aid
@@ -89,6 +180,7 @@
         d.internet = +d.internet;
     });
     
+    // set domains for color scales based on transparency and internet penetration
     var colorTrans = d3.scale.linear()
         .domain([d3.min(csv, function(d) { return d.trans; }), d3.max(csv, function(d) { return d.trans; })])
         .interpolate(d3.interpolateHsl)
@@ -97,39 +189,35 @@
     var colorInter = d3.scale.linear()
         .domain([d3.min(csv, function(d) { return d.internet; }), d3.max(csv, function(d) { return d.internet; })])
         .interpolate(d3.interpolateHsl)
-        .range(["#ad7fa8", "#73d216"]);
+        .range(["#2d3a39", "#b6efff"]);
     
           
     x.domain([0, d3.max(csv, function(d) { return d.aid; })]);
     y.domain(csv.map(function(d) { return d.country; }));    
       
         
-        var rect = svg.selectAll(".rects")
-            .data(csv, function(d) { return d.country; })
+    var rect = svg.selectAll(".rects")
+        .data(csv, function(d) { return d.country; })
             
-        var rectEnter = rect.enter().insert("g", ".axis")
-         //   .datum(function(d, i) { return {country: d.country, pad: widthScale(d.internet[i - 1])}; })
-            .attr("transform", function(d, i) { return "translate(0," + y(d.country) + ")"; })
-         //   .attr("transform", function(d) { return "translate(0," + widthScale(d.internet) + ")"; }) 
-            .attr("class", "rects")
-          //  .attr("y", function(d) { return (y(d.country + widthScale(d.internet))); })
+    var rectEnter = rect.enter().insert("g", ".axis")
+        .attr("transform", function(d, i) { return "translate(0," + y(d.country) + ")"; })
+        .attr("class", "rects")
     
-    
-        rectEnter.append("rect")   
-//           .attr("y", function(d) { return y(d.country); })
-           // .attr("height", function(d) { return h - x(d.aid); })
-            .attr({
-            //    height: function(d) { return widthScale(d.internet); },
-                height: y.rangeBand(),
-                width: function(d) { return x(d.aid); },
-                fill: function(d, i) { return colorTrans(d.trans); }
-                });
-         //   .attr("x", 0);
+        rectEnter.append("rect")
+        .attr({
+            height: y.rangeBand(),
+            width: function(d) { return x(d.aid); },
+            fill: "#ad7fa8"
+            })
         
+        rectEnter.append("title")
+        .text(function(d) { return "$" + currFormat(d.aid) + " million "});
+        
+    $(".rects").tipsy({gravity:'w'});
+
         rectEnter.append("text")
         .attr("class", "label")
             .attr("x", -3)
-          //  .attr("y", function(d) { return widthScale(d.internet) / 2; })
             .attr("y", y.rangeBand() / 2)
             .attr("dy", ".35em")
             .attr("text-anchor", "end")
@@ -140,52 +228,97 @@
         
     d3.selectAll("#sort input").on("change", changeSort);
     d3.selectAll("#coloration input").on("change", changeColor); 
-    
-      
          
-    function changeSort() {
+  // function that will change order in which bars are displayed
+  function changeSort() {
     var ySort;
         if (this.value === "internet") {
             ySort = y.domain(csv.sort(function(a, b) { return d3.ascending(a.internet, b.internet); })
             .map(function(d) { return d.country; }))
-            } 
+            
+            $("#key")
+            .fadeOut(400, function() { $(this).html("Fewer internet users"); })
+            .delay(0)
+            .fadeIn(400);
+        }
         else if (this.value === "aid") {
             ySort = y.domain(csv.sort(function(a, b) { return d3.descending(a.aid, b.aid); })
             .map(function(d) { return d.country; }))
-            }
+            
+            $("#key")
+            .fadeOut(400, function() { $(this).html("More aid received"); })
+            .delay(0)
+            .fadeIn(400);
+        }
         else if (this.value === "trans") {
             ySort = y.domain(csv.sort(function(a, b) { return d3.ascending(a.trans, b.trans); })
             .map(function(d) { return d.country; }))
-            }
-        else { ySort = y.domain(csv.sort(function(a, b) { return d3.ascending(a.country, b.country); })
-        .map(function(d) { return d.country; }))
-            }
+            
+            $("#key")
+            .fadeOut(400, function() { $(this).html("More corrupt"); })
+            .delay(0)
+            .fadeIn(400);
+        }
+        else { 
+            ySort = y.domain(csv.sort(function(a, b) { return d3.ascending(a.country, b.country); })
+            .map(function(d) { return d.country; }))
+            
+            $("#key")
+                .fadeOut(400, function() { $(this).html("Beginning of alphabet"); })
+                .delay(0)
+                .fadeIn(400);
+                }
 
-    var transition = svg.transition().duration(400),
-        delay = function(d, i) { return i * 15; };
+    var transitionSort = svg.transition().duration(700),
+        delay = function(d, i) { return i * 25; };
 
-    transition.selectAll(".rects")
+    transitionSort.selectAll(".rects")
     .delay(delay)
     .attr("transform", function(d, i) { return "translate(0," + ySort(d.country) + ")"; });
         
-    transition.select(".y.axis")
+    transitionSort.select(".y.axis")
     .selectAll("g")
     .delay(delay);
     };
-        
-    function changeColor() {
+  
+  // function that will change color scale used      
+  function changeColor() {
+  
+    var transitionColor = rect.transition().duration(1000)
+    
         if (this.value === "internet") {
-            svg.selectAll("rect")
+            transitionColor.selectAll("rect")
                 .attr("fill", function(d, i) { return colorInter(d.internet); })
-        } else {
-            svg.selectAll("rect")
+                
+            $("span.legends").fadeOut(100).delay(100);
+            
+            $("span#colorInter").delay(100).fadeIn(400);
+            
+        } else if (this.value === "trans") {
+            transitionColor.selectAll("rect")
                 .attr("fill", function(d, i) { return colorTrans(d.trans); })
-            }
+            
+            $("span.legends").fadeOut(100).delay(100);
+            
+            $("span#colorTrans").delay(100).fadeIn(400);
+         
+        } else { 
+            transitionColor.selectAll("rect")
+                .attr("fill", "#ad7fa8")
+                
+            $("span.legends").fadeOut(100)
+                .delay(0);
+        }     
         }; 
   });
 
-
-
-</script>
+    </script>
+</div>
+</div>
+    <div id="footer">
+    This interactive chart was designed and built by Nikhil Sonnad. For more info on him, check out his <a href="http://nikhilsonnad.com/">website</a> or <a href="http://theoldbeggar.com">blog</a>. The chart makes use the javascript library <a href="http://d3js.org">D3js</a>. The code within is influenced by <a href="https://github.com/mbostock">Mike Bostock</a>, creator of D3js. The tooltips are made possible by <a href="https://github.com/jdonaldson"">Justin Donaldson's</a> fork of the jQuery plugin Tipsy. 
+    </div>
+</div>
 </body>
+
 </html>
