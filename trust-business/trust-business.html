@@ -18,7 +18,6 @@
 	.axis text { font-size:10px; }
 
 	body { font: 12px sans-serif; }
-	#chart, #legend { float:left; }
 	.circles { opacity: .5; }
 
 	.tipsy { font-size:11px; margin-top:-10px;}
@@ -79,7 +78,6 @@ d3.csv("trust-business.csv", function(data) {
 	
 	var x0 = Math.max(-d3.min(data, function(d) { return d.trust; }), d3.max(data, function(d) { return d.trust; }));
 	x.domain([-100, 100]);
-	//y.domain(d3.extent(data, function(d) { return d.business; }) );
 	y.domain([180, 0])
 	
 	// style the circles, set their locations based on data
