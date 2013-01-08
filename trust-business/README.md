@@ -1,0 +1,1 @@
+A scatterplot that maps social trust against ease of doing business in various countries. For tooltips, it makes use of [Justin Donaldson's](https://github.com/jdonaldson) fork of the jQuery plugin tipsy. Data come from the Pew Global Attitudes project and the Doing Business rankings. 
