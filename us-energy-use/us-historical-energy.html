@@ -7,30 +7,35 @@
 	<script src="jquery.tipsy.js" type="text/javascript" charset="utf-8"></script>
 	<link rel="stylesheet" href="http://onehackoranother.com/projects/jquery/tipsy/stylesheets/tipsy.css" type="text/css" title="no title" charset="utf-8"/> -->
 <style type="text/css">
-
+body { font: 11px sans-serif; }
+.axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
 </style>
 </head>
 <body>
 <div id="chart">
 
 <script type="text/javascript">
-	var margin = {t:20, r:20, b:20, l:20 },
-		w1 = 500,
-		w2 = 300,
-		h = 500,
+	var margin = {t:20, r:20, b:20, l:30 },
+		w1 = 550 - margin.l,
+		w2 = 300 - margin.r,
+		h = 350 - margin.t - margin.b,
 		x = d3.time.scale().range([0, w1]),
-		y = d3.scale.linear().range([h - margin.t - margin.b, 0]),
+		y = d3.scale.linear().range([h, 0]),
 		color = d3.scale.category10(),
 		formatTime = d3.time.format("%Y").parse;
 		
+	var	radius = Math.min((w1 + w2), h) / 2;
+		
 	var stacked = d3.select("#chart").append("svg")
-		.attr("width", w1)
-		.attr("height", h)
+		.attr("width", w1 + margin.l)
+		.attr("height", h + margin.t + margin.b)
+	   .append("g")
 		.attr("transform", "translate(" + margin.l + "," + margin.t + ")");
 		
 	var krispy = d3.select("#chart").append("svg")
-		.attr("width", w2)
-		.attr("height", h)
+		.attr("width", w2 + margin.r)
+		.attr("height", h + margin.t + margin.b)
+	   .append("g")
 		.attr("transform", "translate(520," + margin.t + ")");
 	
 	var xAxis = d3.svg.axis()
@@ -41,33 +46,74 @@
 				.scale(y)
 				.orient("left");
 				
-	var area = d3.svg.area()
-				.x(function(d) { return x(d.x); })
-				.y0(function(d) { return d.y; })
-				.y1(function(d) { return d.y + d.y0; });
-	
 	var stack = d3.layout.stack()
 				.values(function(d) { return d.values; });
-				
-	d3.csv("us-historical-energy.csv", function(error, data) { 
-		data.forEach(function(d) { 
-			d.Year = formatTime(d.Year);
-		})
-		
-		color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year"; }))
-		
-		var sources = stack(color.domain().map(function(name) {
-			return {
-				name: name,
-				values: data.map(function(d) { 
-					return { year: d.Year, y: +d[name] };
-				})
-			};
-		}));
-		
-		
 	
-	})
+	var area = d3.svg.area()
+				.x(function(d) { return x(d.year); })
+				.y0(function(d) { return y(d.y0); })
+				.y1(function(d) { return y(d.y + d.y0); });	
+				
+	var arc = d3.svg.arc()
+				.outerRadius(radius - 30)
+				.innerRadius(radius - 70);
+				
+	var pie = d3.layout.pie()
+				.sort(null)
+				.value(function(d) { return d.values[values.length - 1]; });
+				
+d3.csv("us-historical-energy.csv", function(error, data) { 
+	data.forEach(function(d) { 
+		d.Year = formatTime(d.Year);
+	});
+	
+	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year"; }))
+	
+	var sourcesStack = stack(color.domain().map(function(name) {
+		return {
+			name: name,
+			values: data.map(function(d) { 
+				return { year: d.Year, y: +d[name] };
+			})
+		};
+	}));
+	
+	x.domain(d3.extent(data, function(d) { return d.Year; }));
+	y.domain([0, d3.max(sourcesStack, function(c) { return d3.max(c.values, function(v) { return v.y + v.y0; }); })]); 
+	
+	var group = stacked.selectAll(".sources")
+		.data(sourcesStack)
+	   .enter().append("g")
+	    .attr("class", "sources")
+		
+	group.append("path")
+		.attr("class", "area")
+		.attr("d", function(d) { return area(d.values); })
+		.style("fill", function(d) { return color(d.name); })
+		
+	stacked.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + h + ")")
+		.call(xAxis)
+	
+	stacked.append("g")
+		.attr("class", "y axis")
+		.call(yAxis)
+		
+	// the donut
+	var sourcesPie = pie(color.domain());
+	
+	console.log(sourcesPie)
+	
+	var donut = krispy.selectAll(".arc")
+		.data(sourcesPie)
+	   .enter().append("g")
+		.attr("class", "arc");
+		
+	donut.append("path")
+		.attr("d", arc)
+		.style("fill", function(d) { return color(d.name); })
+})
 </script>
 
 </div>
