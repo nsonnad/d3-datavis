@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>US Historical Energy Consumption</title>
+    <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+	<!--<script src="http://code.jquery.com/jquery-1.8.3.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="jquery.tipsy.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" href="http://onehackoranother.com/projects/jquery/tipsy/stylesheets/tipsy.css" type="text/css" title="no title" charset="utf-8"/> -->
+<style type="text/css">
+
+</style>
+</head>
+<body>
+<div id="chart">
+
+<script type="text/javascript">
+	var margin = {t:20, r:20, b:20, l:20 },
+		w1 = 500,
+		w2 = 300,
+		h = 500,
+		x = d3.time.scale().range([0, w1]),
+		y = d3.scale.linear().range([h - margin.t - margin.b, 0]),
+		color = d3.scale.category10(),
+		formatTime = d3.time.format("%Y").parse;
+		
+	var stacked = d3.select("#chart").append("svg")
+		.attr("width", w1)
+		.attr("height", h)
+		.attr("transform", "translate(" + margin.l + "," + margin.t + ")");
+		
+	var krispy = d3.select("#chart").append("svg")
+		.attr("width", w2)
+		.attr("height", h)
+		.attr("transform", "translate(520," + margin.t + ")");
+	
+	var xAxis = d3.svg.axis()
+				.scale(x)
+				.orient("bottom");
+				
+	var yAxis = d3.svg.axis()
+				.scale(y)
+				.orient("left");
+				
+	var area = d3.svg.area()
+				.x(function(d) { return x(d.x); })
+				.y0(function(d) { return d.y; })
+				.y1(function(d) { return d.y + d.y0; });
+	
+	var stack = d3.layout.stack()
+				.values(function(d) { return d.values; });
+				
+	d3.csv("us-historical-energy.csv", function(error, data) { 
+		data.forEach(function(d) { 
+			d.Year = formatTime(d.Year);
+		})
+		
+		color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year"; }))
+		
+		var sources = stack(color.domain().map(function(name) {
+			return {
+				name: name,
+				values: data.map(function(d) { 
+					return { year: d.Year, y: +d[name] };
+				})
+			};
+		}));
+		
+		
+	
+	})
+</script>
+
+</div>
+</body>
+</html>
