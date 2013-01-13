@@ -31,12 +31,13 @@ div#pie { width: 350px; float:left; }
 		w2 = 300 - margin.r,
 		h = 350 - margin.t - margin.b,
 		x = d3.time.scale().range([0, w1]),
-		y = d3.scale.linear().range([h, 0]),
-		color = d3.scale.category10(),
+		y = d3.scale.linear().range([h, 0]).domain([0, 110]),
+		color = d3.scale.ordinal().range(["#3A5A64", "#A81F5E", "#9BCFF4", "#DABD49", "#A78149", "#49DA8D"]),
 		formatTime = d3.time.format("%Y").parse;
 	
-	var data,
-		latest;
+	var dataChange,
+		latest,
+		data;
 		
 	var	radius = Math.min((w1 + w2), h) / 2;
 		
@@ -68,7 +69,6 @@ div#pie { width: 350px; float:left; }
 				.y0(function(d) { return y(d.y0); })
 				.y1(function(d) { return y(d.y + d.y0); })
 				
-				
 	var arc = d3.svg.arc()
 				.outerRadius(radius - 20)
 				.innerRadius(radius - 60);
@@ -76,9 +76,15 @@ div#pie { width: 350px; float:left; }
 	var pie = d3.layout.pie()
 		.sort(null)
 		.value(function(d) { return d.values; });
-
+	
+	stacked.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+		
 				
 d3.csv("us-historical-energy.csv", function(csv) {	
+	data = csv;
+	
 	csv.forEach(function(d) { 
 		d.Year = formatTime(d.Year);
 	});
@@ -86,7 +92,7 @@ d3.csv("us-historical-energy.csv", function(csv) {
 	var latest = 2;
 	
 	function update() {
-		data = csv.slice(0, latest)
+		dataChange = csv.slice(0, latest)
 		latest++;
 		if (latest < csv.length) {
 		redraw();
@@ -98,7 +104,7 @@ d3.csv("us-historical-energy.csv", function(csv) {
 });
 	
 function redraw() {
-	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year"; }))
+	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year" && key !== "sourcesPie"; }))
 	
 	var sourcesStack = stack(color.domain().map(function(name) {
 	  return {
@@ -109,43 +115,33 @@ function redraw() {
 	  };
 	}));
 	
-	console.log(color.domain())
-	
-	x.domain([d3.min(data, function(d) { return d.Year; }), d3.max(data, function(d) { return d.Year; })]);
-	
-//	y.domain([0, d3.max(sourcesStack, function(c) {
-	//  return d3.max(c.values, function(v) {
-	 //   return v.y + v.y0; }); })]); 
-	
-	y.domain([0, 110])
-	var group = stacked.selectAll(".sources")
+	x.domain([d3.min(dataChange, function(d) { return d.Year; }), d3.max(dataChange, function(d) { return d.Year; })]);
+
+	var stacks = stacked.selectAll(".sources")
 		.data(sourcesStack)
-	   	
-	var groupUpdate = d3.transition(group)
-		
-	groupUpdate.enter().append("g")
+	   
+	var stacksEnter = stacks.enter().append("g")
 	    .attr("class", "sources")
 		
-	group.append("path")
+	stacksEnter.append("path")
 		.attr("class", "area")
 		.attr("d", function(d) { return area(d.values); })
 		.style("fill", function(d) { return color(d.name); })
 		
-	stacked.append("g")
+	stacks.append("g")
 		.attr("class", "x axis")
 		.attr("transform", "translate(0," + h + ")");
 	
-	stacked.append("g")
-		.attr("class", "y axis")
-		.call(yAxis);
+	var stacksUpdate = d3.transition(stacks)
 	
-	groupUpdate.transition().selectAll(".area").duration(500)
+	stacksUpdate.transition().select("path").duration(500)
 		.attr("d", function(d) { return area(d.values); })
 	
 	d3.transition().select(".x.axis").duration(500).call(xAxis)
 	
+	
 	// the donut
-	/*
+	
 	data.forEach(function(d) {
       d.sourcesPie = color.domain().map(function(name) {
         return {name: name, values: +d[name]};
@@ -153,18 +149,44 @@ function redraw() {
 	});
 	
 	var donut = krispy.selectAll(".arc")
-		.data(pie(data[data.length - 1].sourcesPie))
-	   .enter().append("g")
-		.attr("class", "arc");
-		
-	donut.append("path")
+		.data(pie(dataChange[dataChange.length - 1].sourcesPie))
+	
+	var donutEnter = donut.enter().append("g")
+		.attr("class", "arc")
+		.append("path")
+		.attr("class", "donutPath")
 		.attr("d", arc)
-		.style("fill", function(d) { return color(d.data.name); })
-	*/
-	
-	
+		.each(function(d) { this._current = d; })
+		.style("fill", function(d) { return color(d.data.name); });
+		
+	donutEnter.append("svg:text")
+		.attr("transform", function(d) {
+        d.outerRadius = radius + 50; // Set Outer Coordinate
+        d.innerRadius = radius + 45; // Set Inner Coordinate
+		return "translate(" + arc.centroid(d) + ")"; })
+		.attr("dy", ".35em")
+		.style("text-anchor", "middle")
+		.text(function(d) { return d.data.name; });
+		
+	var donutUpdate = d3.transition(donut)
+
+	donutUpdate.transition().select("path").duration(500)
+		.attrTween("d", arcTween)
 	};
 	
+	donutUpdate.transition().select("text")
+		.attr("transform", function(d) {
+        d.outerRadius = radius + 50; // Set Outer Coordinate
+        d.innerRadius = radius + 45; // Set Inner Coordinate
+		return "translate(" + arc.centroid(d) + ")"; })
+	
+	function arcTween(a) {
+		  var i = d3.interpolate(this._current, a);
+		  this._current = i(0);
+		  return function(t) {
+			return arc(i(t));
+		  };
+		}
 </script>
 </body>
 </html>
