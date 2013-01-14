@@ -193,7 +193,7 @@ function redraw() {
   
   // update the axes, though only the y axis will change    
       d3.transition(svg).select(".y.axis")
-          .call(yAxis);   
+          .call(yAxis);
           
       d3.transition(svg).select(".x.axis")
             .attr("transform", "translate(0," + h + ")")

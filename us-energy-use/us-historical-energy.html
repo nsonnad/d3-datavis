@@ -11,12 +11,16 @@ body { font: 11px sans-serif; }
 
 .axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
 
+line.tick { stroke: #cccccc; }
+
 .arc path {
   stroke: #fff;
 }
 
 div#stack { width: 550px; float:left; }
 div#pie { width: 350px; float:left; }
+
+.donutLabels { font-size: 1em; fill:black; }
 </style>
 </head>
 <body>
@@ -28,18 +32,20 @@ div#pie { width: 350px; float:left; }
 <script type="text/javascript">
 	var margin = {t:20, r:20, b:20, l:30 },
 		w1 = 500 - margin.l,
-		w2 = 300 - margin.r,
+		w2 = 350 - margin.r,
 		h = 350 - margin.t - margin.b,
 		x = d3.time.scale().range([0, w1]),
 		y = d3.scale.linear().range([h, 0]).domain([0, 110]),
-		color = d3.scale.ordinal().range(["#3A5A64", "#A81F5E", "#9BCFF4", "#37A36A", "#DABD49", "#C78739"]),
+		color = d3.scale.ordinal().range(["#37A36A", "#3A5A64", "#DABD49", "#C78739", "#8AB8D9", "#A81F5E"]),
+		//color = d3.scale.ordinal().range(["#3A5A64", "#A81F5E", "#9BCFF4", "#37A36A", "#DABD49", "#C78739"]),
 		formatTime = d3.time.format("%Y").parse;
 	
 	var dataChange,
 		latest,
 		data;
 		
-	var	radius = Math.min((w1 + w2), h) / 2;
+	var radius = Math.min((w2 - 50), h) / 2;
+	var labelRadius = radius - 20;
 		
 	var stacked = d3.select("#stack").append("svg")
 		.attr("width", w1 + margin.l)
@@ -48,17 +54,19 @@ div#pie { width: 350px; float:left; }
 		.attr("transform", "translate(" + margin.l + "," + margin.t + ")");
 		
 	var krispy = d3.select("#pie").append("svg")
-		.attr("width", w2 + margin.r)
+		.attr("width", w2 + margin.r + margin.l)
 		.attr("height", h + margin.t + margin.b)
 	   .append("g")
 		.attr("transform", "translate(150," + (h/2 + margin.t) + ")");
 	
 	var xAxis = d3.svg.axis()
 				.scale(x)
+				.tickSubdivide(true)
 				.orient("bottom");
 				
 	var yAxis = d3.svg.axis()
 				.scale(y)
+				.tickSize(-w1, 0, 0)
 				.orient("left");
 				
 	var stack = d3.layout.stack()
@@ -70,8 +78,8 @@ div#pie { width: 350px; float:left; }
 				.y1(function(d) { return y(d.y + d.y0); })
 				
 	var arc = d3.svg.arc()
-				.outerRadius(radius - 20)
-				.innerRadius(radius - 60);
+				.outerRadius(radius - 40)
+				.innerRadius(radius - 80);
 				
 	var pie = d3.layout.pie()
 		.sort(null)
@@ -83,6 +91,7 @@ div#pie { width: 350px; float:left; }
 		
 				
 d3.csv("us-historical-energy.csv", function(csv) {	
+	original = csv;
 	data = csv;
 	
 	csv.forEach(function(d) { 
@@ -95,12 +104,10 @@ d3.csv("us-historical-energy.csv", function(csv) {
 		dataChange = csv.slice(0, latest)
 		latest++;
 		if (latest < csv.length) {
-		redraw();
-			setTimeout(update, 500);
-			
+		redraw();			
 		};
 	};
-	update();
+	setInterval(update, 500);
 });
 	
 function redraw() {
@@ -116,7 +123,15 @@ function redraw() {
 	}));
 	
 	x.domain([d3.min(dataChange, function(d) { return d.Year; }), d3.max(dataChange, function(d) { return d.Year; })]);
-
+	
+	/*yearDisplay = stacked.append("g")
+	
+	yearDisplay.append("text")
+		.text(function(d) { return original[latest].Year; })
+		
+	d3.transition(yearDisplay).selectAll("text")
+		.text(function(d) { return d3.max(x.domain()); })*/
+	
 	var stacks = stacked.selectAll(".sources")
 		.data(sourcesStack)
 	   
@@ -131,14 +146,20 @@ function redraw() {
 	stacks.append("g")
 		.attr("class", "x axis")
 		.attr("transform", "translate(0," + h + ")");
+		
+	stacksEnter.append("text")
+		.attr("transform", "translate(" + margin.l + "," + margin.t + ")")
+		.text(function(d) { return d.Year; })
 	
 	var stacksUpdate = d3.transition(stacks)
 	
 	stacksUpdate.transition().select("path").duration(500)
 		.attr("d", function(d) { return area(d.values); })
 	
+	stacksUpdate.select("text")
+		.text(function(d) { return d.Year; })
+		
 	d3.transition().select(".x.axis").duration(500).call(xAxis)
-	
 	
 	// the donut
 	
@@ -150,36 +171,62 @@ function redraw() {
 	
 	var donut = krispy.selectAll(".arc")
 		.data(pie(dataChange[dataChange.length - 1].sourcesPie))
-	
+			
 	var donutEnter = donut.enter().append("g")
 		.attr("class", "arc")
-		.append("path")
+		
+	 donutEnter.append("path")
 		.attr("class", "donutPath")
 		.attr("d", arc)
 		.each(function(d) { this._current = d; })
-		.style("fill", function(d) { return color(d.data.name); });
-		
-	donutEnter.append("svg:text")
+		.style("fill", function(d) { return color(d.data.name); })
+	
+	donutEnter.append("text")
+		.attr("class", "donutLabels")
 		.attr("transform", function(d) {
-        d.outerRadius = radius + 50; // Set Outer Coordinate
-        d.innerRadius = radius + 45; // Set Inner Coordinate
-		return "translate(" + arc.centroid(d) + ")"; })
+			var c = arc.centroid(d),
+            xPie = c[0],
+            yPie = c[1],
+            hPie = Math.sqrt(xPie*xPie + yPie*yPie);
+        return "translate(" + (xPie/hPie * labelRadius) +  ',' +
+           (yPie/hPie * labelRadius) +  ")rotate(" + angle(d) + ")";
+    })
 		.attr("dy", ".35em")
-		.style("text-anchor", "middle")
-		.text(function(d) { return d.data.name; });
+		.attr("text-anchor", "middle")
+		.text(function(d) { return d.data.name; })
+		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;});
+	 
+/*	 donutEnter.append("line")
+		.attr("x1", 0)
+		.attr("x2", 0)
+		.attr("y1", -radius-3)
+		.attr("y2", -radius-8)
+		.attr("stroke", "gray")
+		.attr("transform", function(d) {
+			return "rotate(" + (d.startAngle+d.endAngle)/2 * (180/Math.PI) + ")";
+		}); */
+	  
+	function angle(d) {
+      var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+      return a > 90 ? a - 180 : a;
+    }
+	
+	var donutUpdate = d3.transition(donut);
+	
+	donutUpdate.transition().select("text").duration(500)
+		.attr("transform", function(d) {
+			var c = arc.centroid(d),
+            xPie = c[0],
+            yPie = c[1],
+            // pythagorean theorem for hypotenuse
+            hPie = Math.sqrt(xPie*xPie + yPie*yPie);
+        return "translate(" + (xPie/hPie * labelRadius) +  ',' +
+           (yPie/hPie * labelRadius) +  ")rotate(" + angle(d) + ")"; }) 
+		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;});
 		
-	var donutUpdate = d3.transition(donut)
-
 	donutUpdate.transition().select("path").duration(500)
 		.attrTween("d", arcTween)
-	};
-	
-	donutUpdate.transition().select("text")
-		.attr("transform", function(d) {
-        d.outerRadius = radius + 50; // Set Outer Coordinate
-        d.innerRadius = radius + 45; // Set Inner Coordinate
-		return "translate(" + arc.centroid(d) + ")"; })
-	
+		
 	function arcTween(a) {
 		  var i = d3.interpolate(this._current, a);
 		  this._current = i(0);
@@ -187,6 +234,7 @@ function redraw() {
 			return arc(i(t));
 		  };
 		}
+	};
 </script>
 </body>
 </html>
