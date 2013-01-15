@@ -7,11 +7,11 @@
 	<script src="jquery.tipsy.js" type="text/javascript" charset="utf-8"></script>
 	<link rel="stylesheet" href="http://onehackoranother.com/projects/jquery/tipsy/stylesheets/tipsy.css" type="text/css" title="no title" charset="utf-8"/> -->
 <style type="text/css">
-body { font-size: 11px; font-family: Verdana, Geneva, sans-serif; }
+body { font-size: 11px; font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; }
 
 .axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
 
-line.tick { stroke: #cccccc; }
+line.tick { stroke: #cccccc; opacity:.4; }
 
 .arc path {
   stroke: #fff;
@@ -20,7 +20,8 @@ line.tick { stroke: #cccccc; }
 div#stack { width: 550px; float:left; }
 div#pie { width: 350px; float:left; }
 .yLabels { stroke: none; font-size: 1em; fill:#191919; }
-.donutLabels { stroke: none; font-size: 1em; fill:#191919; opacity:.8; }
+.donutLabels { stroke: none; font-size: 1em; fill:white; }
+
 </style>
 </head>
 <body>
@@ -31,8 +32,8 @@ div#pie { width: 350px; float:left; }
 
 <script type="text/javascript">
 	var margin = {t:20, r:20, b:20, l:30 },
-		w1 = 500 - margin.l - margin.r,
-		w2 = 350 - margin.r,
+		w1 = 550 - margin.l - margin.r,
+		w2 = 300 - margin.r,
 		h = 350 - margin.t - margin.b,
 		x = d3.time.scale().range([0, w1 - margin.r]).clamp(true),
 		y = d3.scale.linear().range([h, 0]).domain([0, 110]),
@@ -43,7 +44,7 @@ div#pie { width: 350px; float:left; }
 		latest,
 		data;
 		
-	var radius = Math.min((w2 - 50), h) / 2;
+	var radius = Math.min((w2), h) / 2;
 	var labelRadius = radius - 20;
 		
 	var stacked = d3.select("#stack").append("svg")
@@ -77,8 +78,8 @@ div#pie { width: 350px; float:left; }
 				.y1(function(d) { return y(d.y + d.y0); })
 				
 	var arc = d3.svg.arc()
-				.outerRadius(radius - 40)
-				.innerRadius(radius - 80);
+				.outerRadius(radius - 10)
+				.innerRadius(radius - 50);
 				
 	var pie = d3.layout.pie()
 		.sort(null)
@@ -107,10 +108,32 @@ d3.csv("us-historical-energy.csv", function(csv) {
 		};
 	};
 	setInterval(update, 500);
+	
+	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year" && key !== "sourcesPie"; }))
+	
+	var legend = stacked.append("g")
+				.attr("class", "legendBox")
+	
+	var legends = legend.selectAll(".legend")
+			.data(color.domain())
+		.enter().append("g")
+			.attr("class", "legend")
+			.attr("transform", function(d, i) { return "translate(10," + (5 + (i * 20)) + ")"; });
+			
+		legends.append("rect")
+			.attr("width", 15)
+			.attr("height", 15)
+			.style("fill", color)
+	
+		legends.append("text")
+			.attr("x", 20)
+			.attr("y", 8)
+			.attr("dy", ".35em")
+			.text(function(d) { return d; });
 });
 	
 function redraw() {
-	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year" && key !== "sourcesPie"; }))
+	
 	
 	var sourcesStack = stack(color.domain().map(function(name) {
 	  return {
@@ -178,7 +201,11 @@ function redraw() {
 			
 	var donutEnter = donut.enter().append("g")
 		.attr("class", "arc")
-		
+	
+	var total = d3.sum(dataChange[dataChange.length - 1].sourcesPie, function(d) { return d.values; })
+	var formatPercent = d3.format("%.1p")
+	console.log(total)
+	
 	 donutEnter.append("path")
 		.attr("class", "donutPath")
 		.attr("d", arc)
@@ -188,17 +215,12 @@ function redraw() {
 	donutEnter.append("text")
 		.attr("class", "donutLabels")
 		.attr("transform", function(d) {
-			var c = arc.centroid(d),
-            xPie = c[0],
-            yPie = c[1],
-            hPie = Math.sqrt(xPie*xPie + yPie*yPie);
-        return "translate(" + (xPie/hPie * labelRadius) +  ',' +
-           (yPie/hPie * labelRadius) +  ")rotate(" + angle(d) + ")";
-    })
+			return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
 		.attr("dy", ".35em")
 		.attr("text-anchor", "middle")
-		.text(function(d) { return d.data.name; })
-		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;});
+		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
+		.text(function(d) { 
+			return formatPercent(d.data.values/total) });
 	 
 /*	 donutEnter.append("line")
 		.attr("x1", 0)
@@ -219,14 +241,10 @@ function redraw() {
 	
 	donutUpdate.transition().select("text").duration(500)
 		.attr("transform", function(d) {
-			var c = arc.centroid(d),
-            xPie = c[0],
-            yPie = c[1],
-            // pythagorean theorem for hypotenuse
-            hPie = Math.sqrt(xPie*xPie + yPie*yPie);
-        return "translate(" + (xPie/hPie * labelRadius) +  ',' +
-           (yPie/hPie * labelRadius) +  ")rotate(" + angle(d) + ")"; }) 
-		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;});
+        return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; }) 
+		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
+		.text(function(d) {
+			return formatPercent(d.data.values/total) });
 		
 	donutUpdate.transition().select("path").duration(500)
 		.attrTween("d", arcTween)
