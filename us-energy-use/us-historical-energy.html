@@ -20,7 +20,7 @@ line.tick { stroke: #cccccc; opacity:.4; }
 div#stack { width: 550px; float:left; }
 div#pie { width: 350px; float:left; }
 .yLabels { stroke: none; font-size: 1em; fill:#191919; }
-.donutLabels { stroke: none; font-size: 1em; fill:white; }
+.donutLabels { font-size:12px; font-weight: bold; stroke: none; fill:white; }
 
 </style>
 </head>
@@ -66,6 +66,7 @@ div#pie { width: 350px; float:left; }
 				
 	var yAxis = d3.svg.axis()
 				.scale(y)
+				.tickSubdivide(true)
 				.tickSize(-w1+margin.r, 0, 0)
 				.orient("left");
 				
@@ -78,8 +79,8 @@ div#pie { width: 350px; float:left; }
 				.y1(function(d) { return y(d.y + d.y0); })
 				
 	var arc = d3.svg.arc()
-				.outerRadius(radius - 10)
-				.innerRadius(radius - 50);
+				.outerRadius(radius - 15)
+				.innerRadius(radius - 55);
 				
 	var pie = d3.layout.pie()
 		.sort(null)
@@ -203,7 +204,7 @@ function redraw() {
 		.attr("class", "arc")
 	
 	var total = d3.sum(dataChange[dataChange.length - 1].sourcesPie, function(d) { return d.values; })
-	var formatPercent = d3.format("%.1p")
+	var formatPercent = d3.format("%.1f")
 	console.log(total)
 	
 	 donutEnter.append("path")
