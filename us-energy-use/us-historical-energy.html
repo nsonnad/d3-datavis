@@ -23,6 +23,7 @@ line.tick { stroke: #cccccc; opacity:.4; }
 .underlay { visibility: hidden; pointer-events:all; }
 .underlay rect { fill:gray; opacity:.3; }
 .tooltip { position:absoulte; }
+.yearDisplay { font-size: 50px; fill: gray; }
 </style>
 </head>
 <body>
@@ -32,8 +33,8 @@ line.tick { stroke: #cccccc; opacity:.4; }
 <script type="text/javascript">
 // global variables
 var margin = {t:20, r:20, b:20, l:30 },
-		w = 850
-		w1 = 550 - margin.l - margin.r,
+		w = 950
+		w1 = 620 - margin.l - margin.r,
 		w2 = 300 - margin.r,
 		h = 350 - margin.t - margin.b,
 		x = d3.time.scale().range([0, w1]).clamp(true),
@@ -191,7 +192,7 @@ var underlayEnter = underlay.enter().append("g")
 	.attr("class", "underlay");
 
 underlayEnter.append("rect")
-	.attr("x", function(d, i) { return x(d.Year); })
+	.attr("x", function(d, i) { return x(d.Year) - underlayWidth/2; })
 	.attr("width", underlayWidth)
 	.attr("y", 0)
 	.attr("height", h);
@@ -200,7 +201,7 @@ underlayEnter.append("rect")
 var underlayUpdate = d3.transition(underlay);
 	
 underlayUpdate.transition().selectAll("rect").duration(650)
-	.attr("x", function(d, i) { return x(d.Year); })
+	.attr("x", function(d, i) { return x(d.Year) - underlayWidth/2; })
 	.attr("width", underlayWidth);
 
 // what to do when we mouse on or off a rect
@@ -225,10 +226,18 @@ var newIndex = data.indexOf(section[section.length - 1])
 var donut = krispy.selectAll(".arc")
 	.data(pie(data[newIndex].sourcesPie))
 
+var yearDisplay = krispy.selectAll(".yearDisplay")
+	.data(pie(data[newIndex].sourcesPie))
+	
 // enter() the donut "g"
 var donutEnter = donut.enter().append("g")
 	.attr("class", "arc")
 
+var	yearDisplayEnter = donut.enter().append("text")
+	.attr("class", "yearDisplay")
+	.attr("transform", "translate(" + (-margin.r - margin.l) + "," + margin.t + ")")
+	.text(function(d) { return +d.data.year.getFullYear() });
+	
 // things we will use to compute percentages
 var total = d3.sum(section[section.length - 1].sourcesPie, function(d) { return d.values; })
 var formatPercent = d3.format("%")
@@ -251,10 +260,6 @@ donutEnter.append("text")
 	.text(function(d) { 
 		return formatPercent(d.data.values/total) });
 
-donutEnter.append("text")
-	.attr("class", "yearDisplay")
-	.text(function(d) { return d.data.year })
-
 // angle function used for rotating labels		
 function angle(d) {
   var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
@@ -274,8 +279,9 @@ donutUpdate.transition().select(".donutLabels").duration(650)
 donutUpdate.transition().select("path").duration(650)
 	.attrTween("d", arcTween)
 
-donutUpdate.transition().select(".yearDisplay").duration(650)
-	.text(function(d) { return d.data.year })
+d3.selectAll(".yearDisplay").transition().duration(0)
+	.text(function(d) { return +d.data.year.getFullYear() })
+
 	
 function arcTween(a) {
   var i = d3.interpolate(this._current, a);
