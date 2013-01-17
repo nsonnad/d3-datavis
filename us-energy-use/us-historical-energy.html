@@ -25,6 +25,7 @@ line.tick { stroke: #cccccc; opacity:.4; }
 .tooltip { position:absoulte; }
 .yearDisplay { font-size: 4.5em; fill: gray; }
 .y.label { font-size: 13px; }
+
 </style>
 </head>
 <body>
@@ -104,6 +105,7 @@ var pie = d3.layout.pie()
 d3.csv("us-historical-energy.csv", function(csv) {	
 	// data variable that will be used throughout
 	data = csv;
+	
 	// format dates
 	data.forEach(function(d) { 
 		d.Year = formatTime(d.Year);
@@ -117,18 +119,23 @@ d3.csv("us-historical-energy.csv", function(csv) {
 		dataChange = csv.slice(0, latest)
 		latest++;
 		if (latest < csv.length + 2) {
-		// redraw function draws the meat of the charts
+		
+		// reset x domain and recall x axis
 		x.domain([dataChange[0].Year, dataChange[dataChange.length - 1].Year])
 		d3.selectAll(".x.axis").transition(stacked).duration(650).call(xAxis);
+		
+		// call redraw function draws the meat of the charts
 		redraw();
 		};
 	};
 	// update data every 650ms
 	var interval = setInterval(update, 650);
+	
 	// create list energy sources to be used as keys
 	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year" && key !== "sourcesPie"; }))
 	var stackGroup = stacked.append("g").attr("class", "stackGroup")
 	var underlayGroup = stacked.append("g").attr("class", "underlayGroup")
+	
 	// create legend
 	var legend = stacked.append("g")
 				.attr("class", "legendBox")
@@ -149,160 +156,155 @@ d3.csv("us-historical-energy.csv", function(csv) {
 			.attr("y", 8)
 			.attr("dy", ".35em")
 			.text(function(d) { return d; });
-			
-	stacked.append("text")
-		.attr("class", "y label")
-		.attr("text-anchor", "end")
-		.attr("x", 160 - h)
-		.attr("y", 10)
-		.attr("dy", ".75em")
-		.attr("transform", "rotate(-90)")
-		.text("Quadrillion BTUs (Quads)");
+	
+		// add y axis label
+		stacked.append("text")
+			.attr("class", "y label")
+			.attr("text-anchor", "end")
+			.attr("x", 160 - h)
+			.attr("y", 10)
+			.attr("dy", ".75em")
+			.attr("transform", "rotate(-90)")
+			.text("Quadrillion BTUs (Quads)");
 
-// draw the charts			
+// draw the charts in redraw function		
 function redraw() {
 
-// map vales to d3.layout.stack() for the area chart
-var sourcesStack = stack(color.domain().map(function(name) {
-  return {
-	name: name,
-	values: data.map(function(d) { 
-	  return { year: d.Year, y: +d[name] };
-	  })
-  };
-}));
+	// map values to d3.layout.stack() for the area chart
+	var sourcesStack = stack(color.domain().map(function(name) {
+		return {
+		name: name,
+		values: data.map(function(d) { 
+			return { year: d.Year, y: +d[name] };
+			})
+		};
+	}));
 
-// set data for energy sources stacked areas
-var stacks = stackGroup.selectAll(".sources")
-	.data(sourcesStack);
+	// set energy sources data for stacked areas
+	var stacks = stackGroup.selectAll(".sources")
+		.data(sourcesStack);
 
-// call enter() for stacked areas
-var stacksEnter = stacks.enter().append("g")
-    .attr("class", "sources");
+	// call enter() for stacked areas
+	var stacksEnter = stacks.enter().append("g")
+			.attr("class", "sources");
 
-// draw paths and areas
-stacksEnter.append("path")
-	.attr("class", "area")
-	.attr("d", function(d) { return area(d.values); })
-	.style("fill", function(d) { return color(d.name); })
+	// draw paths and areas
+	stacksEnter.append("path")
+		.attr("class", "area")
+		.attr("d", function(d) { return area(d.values); })
+		.style("fill", function(d) { return color(d.name); })
 
-// update and transition area values
-var stacksUpdate = d3.transition(stacks)
+	// update and transition area values
+	var stacksUpdate = d3.transition(stacks)
 
-stacksUpdate.transition().select("path").duration(650)
-	.attr("d", function(d) { return area(d.values); });
+	stacksUpdate.transition().select("path").duration(650)
+		.attr("d", function(d) { return area(d.values); });
 
-// create rect underlays that will be used for mouseovers
-var underlay = underlayGroup.selectAll(".underlay").data(dataChange);
-var underlayWidth = w1/dataChange.length;
+	// create rect underlays that will be used for mouseovers
+	var underlay = underlayGroup.selectAll(".underlay").data(dataChange);
+	var underlayWidth = w1/dataChange.length;
 
-// enter() underlay g and append rects
-var underlayEnter = underlay.enter().append("g")
-	.attr("class", "underlay");
+	// enter() underlay g and append rects
+	var underlayEnter = underlay.enter().append("g")
+		.attr("class", "underlay");
 
-underlayEnter.append("rect")
-	.attr("x", function(d, i) { return x(d.Year) - underlayWidth/2; })
-	.attr("width", underlayWidth)
-	.attr("y", 0)
-	.attr("height", h);
-	
-// update and move underlays; reduce width to svgwidth/data.length
-var underlayUpdate = d3.transition(underlay);
-	
-underlayUpdate.transition().selectAll("rect").duration(650)
-	.attr("x", function(d, i) { return x(d.Year) - underlayWidth/2; })
-	.attr("width", underlayWidth);
+	underlayEnter.append("rect")
+		.attr("x", function(d, i) { return x(d.Year) - underlayWidth/2; })
+		.attr("width", underlayWidth)
+		.attr("y", 0)
+		.attr("height", h);
+		
+	// update and move underlays; reduce width to chart width / data length
+	var underlayUpdate = d3.transition(underlay);
+		
+	underlayUpdate.transition().selectAll("rect").duration(650)
+		.attr("x", function(d, i) { return x(d.Year) - underlayWidth/2; })
+		.attr("width", underlayWidth);
 
-// what to do when we mouse on or off a rect
-underlay.on("mouseover", rectOn)
-underlay.on("mouseout", rectOff)
-console.log(dataChange)
+	// what to do when we mouse on or off a rect
+	underlay.on("mouseover", rectOn)
+	underlay.on("mouseout", rectOff)
+
+	//draw the donut chart
 	drawDonut(dataChange);
 };
 
+// function for drawing the donut
 function drawDonut(section) { 
-// now for the donut
-// map values to color.domain key
-section.forEach(function(d) {
-  d.sourcesPie = color.domain().map(function(name) {
-    return {name: name, values: +d[name], year: d.Year};
-  });
-});
 
-var newIndex = data.indexOf(section[section.length - 1])
-
-// set data for the donut
-var donut = krispy.selectAll(".arc")
-	.data(pie(data[newIndex].sourcesPie))
-
-var yearDisplay = krispy.selectAll(".yearDisplay")
-	.data(pie(data[newIndex].sourcesPie))
+	// map values to color.domain key
+	section.forEach(function(d) {
+		d.sourcesPie = color.domain().map(function(name) {
+			return {name: name, values: +d[name], year: d.Year};
+		});
+	});
 	
-// enter() the donut "g"
-var donutEnter = donut.enter().append("g")
-	.attr("class", "arc")
+	// find index of current data point
+	var newIndex = data.indexOf(section[section.length - 1])
 
-var	yearDisplayEnter = donut.enter().append("text")
-	.attr("class", "yearDisplay")
-	.attr("transform", "translate(" + (-margin.r - margin.l - 5) + "," + margin.t + ")")
-	.text(function(d) { return +d.data.year.getFullYear() });
-	
-// things we will use to compute percentages
-var total = d3.sum(section[section.length - 1].sourcesPie, function(d) { return d.values; })
-var formatPercent = d3.format("%")
+	// set data for current data point
+	var donut = krispy.selectAll(".arc")
+		.data(pie(data[newIndex].sourcesPie))
 
-// draw donut arcs
-donutEnter.append("path")
-	.attr("class", "donutPath")
-	.attr("d", arc)
-	.each(function(d) { this._current = d; })
-	.style("fill", function(d) { return color(d.data.name); })
+	// enter() the donut "g"
+	var donutEnter = donut.enter().append("g")
+		.attr("class", "arc")
+		
+		// draw donut arcs
+	donutEnter.append("path")
+		.attr("class", "donutPath")
+		.attr("d", arc)
+		.each(function(d) { this._current = d; })
+		.style("fill", function(d) { return color(d.data.name); })
 
-// draw percentage labels inside arcs	
-donutEnter.append("text")
-	.attr("class", "donutAmount")
-	.attr("transform", function(d) {
-		return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
-	.attr("dy", ".35em")
-	.attr("text-anchor", "middle")
-	.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
-	//.text(function(d) { 
-		//return formatPercent(d.data.values/total) });
-.text(function(d) { return d3.round(d.data.values, 2) });
-
-	
-// angle function used for rotating labels		
-function angle(d) {
-  var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
-  return a > 90 ? a - 180 : a;
-  }
-
-// update and transition arcs and labels	
-var donutUpdate = d3.transition(donut);
-	
-donutUpdate.transition().select(".donutAmount").duration(650)
-	.attr("transform", function(d) {
-    return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; }) 
-	.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
-	//.text(function(d) {
-	//	return formatPercent(d.data.values/total) });
+	// draw percentage labels inside arcs	
+	donutEnter.append("text")
+		.attr("class", "donutAmount")
+		.attr("transform", function(d) {
+			return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
+		.attr("dy", ".35em")
+		.attr("text-anchor", "middle")
+		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
 		.text(function(d) { return d3.round(d.data.values, 2) });
 		
-donutUpdate.transition().select("path").duration(650)
-	.attrTween("d", arcTween)
-
-d3.selectAll(".yearDisplay").transition().duration(0)
-	.text(function(d) { return +d.data.year.getFullYear() })
-
+	// update and transition arcs and labels	
+	var donutUpdate = d3.transition(donut);
+		
+	donutUpdate.transition().select(".donutAmount").duration(650)
+		.attr("transform", function(d) {
+			return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; }) 
+		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
+		.text(function(d) { return d3.round(d.data.values, 2) });
+			
+	donutUpdate.transition().select("path").duration(650)
+		.attrTween("d", arcTween)
 	
-function arcTween(a) {
-  var i = d3.interpolate(this._current, a);
-  this._current = i(0);
-		return function(t) {
-		return arc(i(t));
-		 };
-		}
+	// display the year for the current data point
+	var yearDisplay = krispy.selectAll(".yearDisplay")
+		.data(pie(data[newIndex].sourcesPie))
+		
+	var	yearDisplayEnter = donut.enter().append("text")
+		.attr("class", "yearDisplay")
+		.attr("transform", "translate(" + (-margin.r - margin.l - 5) + "," + margin.t + ")")
+		.text(function(d) { return +d.data.year.getFullYear() });
+		
+	d3.selectAll(".yearDisplay").transition().duration(0)
+		.text(function(d) { return +d.data.year.getFullYear() })
+	
+	// angle function used for rotating labels		
+	function angle(d) {
+		var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
+		return a > 90 ? a - 180 : a;
 	}
+		
+	function arcTween(a) {
+		var i = d3.interpolate(this._current, a);
+		this._current = i(0);
+			return function(t) {
+			return arc(i(t));
+		};
+	}
+};
 
 // helper functions
 
@@ -317,29 +319,24 @@ var rectOn = function() {
 		? (setYear = csv.slice(0, findYear + 1)) 
 		: (setYear = [dataChange[0]]);
 	
-	$('.donutAmount').css("visibility", "visible");
-	
 	drawDonut(setYear);
 	}
 
 var rectOff = function() {
 	var hoverRect = d3.select(this)
-	hoverRect.style("visibility", "hidden")
-	
-	$('.donutAmount').css("visibility", "hidden");
+	hoverRect.style("visibility", "hidden");
 	
 	drawDonut(dataChange);
 	}
 
-// stop animation when we roll over stacked area, restart when leaving
+// stop animation when we roll over stacked area chart, restart when leaving
 $('.stackWrapper').hover(function() {
 		clearInterval(interval);
 		},
 		function() {
 		 interval = setInterval(update, 650);
 		});
-		
-	});
+});
 
 </script>
 </body>
