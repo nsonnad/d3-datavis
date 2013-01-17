@@ -19,11 +19,12 @@ line.tick { stroke: #cccccc; opacity:.4; }
 }
 
 .yLabels { stroke: none; font-size: 1em; fill:#191919; }
-.donutLabels { font-size:12px; font-weight: bold; stroke: none; fill:white; }
+.donutAmount { font-size:12px; font-weight: bold; stroke: none; fill:white; }
 .underlay { visibility: hidden; pointer-events:all; }
 .underlay rect { fill:gray; opacity:.3; }
 .tooltip { position:absoulte; }
-.yearDisplay { font-size: 50px; fill: gray; }
+.yearDisplay { font-size: 4.5em; fill: gray; }
+.y.label { font-size: 13px; }
 </style>
 </head>
 <body>
@@ -83,7 +84,7 @@ var area = d3.svg.area().interpolate("cardinal")
 		
 // settings for donut chart		
 var radius = Math.min((w2), h) / 2,
-		labelRadius = radius - 20;
+		labelRadius = radius;
 
 var krispy = d3.select("#chart").append("svg")
 		.attr("width", w2 + margin.r + margin.l)
@@ -124,7 +125,6 @@ d3.csv("us-historical-energy.csv", function(csv) {
 	};
 	// update data every 650ms
 	var interval = setInterval(update, 650);
-	
 	// create list energy sources to be used as keys
 	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year" && key !== "sourcesPie"; }))
 	var stackGroup = stacked.append("g").attr("class", "stackGroup")
@@ -149,6 +149,15 @@ d3.csv("us-historical-energy.csv", function(csv) {
 			.attr("y", 8)
 			.attr("dy", ".35em")
 			.text(function(d) { return d; });
+			
+	stacked.append("text")
+		.attr("class", "y label")
+		.attr("text-anchor", "end")
+		.attr("x", 160 - h)
+		.attr("y", 10)
+		.attr("dy", ".75em")
+		.attr("transform", "rotate(-90)")
+		.text("Quadrillion BTUs (Quads)");
 
 // draw the charts			
 function redraw() {
@@ -196,7 +205,7 @@ underlayEnter.append("rect")
 	.attr("width", underlayWidth)
 	.attr("y", 0)
 	.attr("height", h);
-
+	
 // update and move underlays; reduce width to svgwidth/data.length
 var underlayUpdate = d3.transition(underlay);
 	
@@ -207,7 +216,7 @@ underlayUpdate.transition().selectAll("rect").duration(650)
 // what to do when we mouse on or off a rect
 underlay.on("mouseover", rectOn)
 underlay.on("mouseout", rectOff)
-
+console.log(dataChange)
 	drawDonut(dataChange);
 };
 
@@ -235,7 +244,7 @@ var donutEnter = donut.enter().append("g")
 
 var	yearDisplayEnter = donut.enter().append("text")
 	.attr("class", "yearDisplay")
-	.attr("transform", "translate(" + (-margin.r - margin.l) + "," + margin.t + ")")
+	.attr("transform", "translate(" + (-margin.r - margin.l - 5) + "," + margin.t + ")")
 	.text(function(d) { return +d.data.year.getFullYear() });
 	
 // things we will use to compute percentages
@@ -251,15 +260,17 @@ donutEnter.append("path")
 
 // draw percentage labels inside arcs	
 donutEnter.append("text")
-	.attr("class", "donutLabels")
+	.attr("class", "donutAmount")
 	.attr("transform", function(d) {
 		return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; })
 	.attr("dy", ".35em")
 	.attr("text-anchor", "middle")
 	.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
-	.text(function(d) { 
-		return formatPercent(d.data.values/total) });
+	//.text(function(d) { 
+		//return formatPercent(d.data.values/total) });
+.text(function(d) { return d3.round(d.data.values, 2) });
 
+	
 // angle function used for rotating labels		
 function angle(d) {
   var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
@@ -269,12 +280,13 @@ function angle(d) {
 // update and transition arcs and labels	
 var donutUpdate = d3.transition(donut);
 	
-donutUpdate.transition().select(".donutLabels").duration(650)
+donutUpdate.transition().select(".donutAmount").duration(650)
 	.attr("transform", function(d) {
     return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; }) 
 	.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
-	.text(function(d) {
-		return formatPercent(d.data.values/total) });
+	//.text(function(d) {
+	//	return formatPercent(d.data.values/total) });
+		.text(function(d) { return d3.round(d.data.values, 2) });
 		
 donutUpdate.transition().select("path").duration(650)
 	.attrTween("d", arcTween)
@@ -305,12 +317,16 @@ var rectOn = function() {
 		? (setYear = csv.slice(0, findYear + 1)) 
 		: (setYear = [dataChange[0]]);
 	
+	$('.donutAmount').css("visibility", "visible");
+	
 	drawDonut(setYear);
 	}
 
 var rectOff = function() {
 	var hoverRect = d3.select(this)
 	hoverRect.style("visibility", "hidden")
+	
+	$('.donutAmount').css("visibility", "hidden");
 	
 	drawDonut(dataChange);
 	}
