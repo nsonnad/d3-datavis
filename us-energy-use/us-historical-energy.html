@@ -8,7 +8,9 @@
 	<script src="jquery.tipsy.js" type="text/javascript" charset="utf-8"></script>
 	<link rel="stylesheet" href="http://onehackoranother.com/projects/jquery/tipsy/stylesheets/tipsy.css" type="text/css" title="no title" charset="utf-8"/> -->
 <style type="text/css">
-body { font-size: 11px; font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; }
+#chart {	width: 960px;
+					margin:0 auto;
+					font-size: 11px; font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, "AppleGothic", sans-serif; }
 
 .axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
 
@@ -19,16 +21,20 @@ line.tick { stroke: #cccccc; opacity:.4; }
 }
 
 .yLabels { stroke: none; font-size: 1em; fill:#191919; }
-.donutAmount { font-size:12px; font-weight: bold; stroke: none; fill:white; }
+.donutAmount { font-size:11px; font-weight: bold; stroke: none; fill:white; opacity:.9}
 .underlay { visibility: hidden; pointer-events:all; }
 .underlay rect { fill:gray; opacity:.3; }
 .tooltip { position:absoulte; }
-.yearDisplay { font-size: 4.5em; fill: gray; }
+.yearDisplay { font-size: 4.5em; fill: gray; stoke:black; opacity:.2; }
 .y.label { font-size: 13px; }
+.donutLabel { fill:gray; opacity:.8; }
 
 </style>
 </head>
 <body>
+<div id="words">
+<button type="button" onclick="play()">Play</button>
+</div>
 <div id="chart">
 </div>
 
@@ -100,7 +106,8 @@ var arc = d3.svg.arc()
 var pie = d3.layout.pie()
 		.sort(null)
 		.value(function(d) { return d.values; });
-		
+
+function play() {
 // bring in the data
 d3.csv("us-historical-energy.csv", function(csv) {	
 	// data variable that will be used throughout
@@ -166,6 +173,15 @@ d3.csv("us-historical-energy.csv", function(csv) {
 			.attr("dy", ".75em")
 			.attr("transform", "rotate(-90)")
 			.text("Quadrillion BTUs (Quads)");
+		
+		krispy.append("text")
+			.attr("class", "donutLabel")
+			.attr("text-anchor", "end")
+			.attr("x", 50)
+			.attr("y", 20)
+			.attr("dy", ".75em")
+			//.attr("transform", "rotate(-90)")
+			.text("(Values in Quads)");
 
 // draw the charts in redraw function		
 function redraw() {
@@ -285,7 +301,7 @@ function drawDonut(section) {
 		
 	var	yearDisplayEnter = donut.enter().append("text")
 		.attr("class", "yearDisplay")
-		.attr("transform", "translate(" + (-margin.r - margin.l - 5) + "," + margin.t + ")")
+		.attr("transform", "translate(" + (-margin.r - margin.l - 5) + "," + 10 + ")")
 		.text(function(d) { return +d.data.year.getFullYear() });
 		
 	d3.selectAll(".yearDisplay").transition().duration(0)
@@ -337,7 +353,7 @@ $('.stackWrapper').hover(function() {
 		 interval = setInterval(update, 650);
 		});
 });
-
+};
 </script>
 </body>
 </html>
