@@ -8,10 +8,9 @@
 	<script src="jquery.tipsy.js" type="text/javascript" charset="utf-8"></script>
 	<link rel="stylesheet" href="http://onehackoranother.com/projects/jquery/tipsy/stylesheets/tipsy.css" type="text/css" title="no title" charset="utf-8"/> -->
 <style type="text/css">
-#chart {	width: 960px;
-					margin:0 auto;
-					font-size: 11px; font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, "AppleGothic", sans-serif; }
-
+body { font-size: 11px; font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, "AppleGothic", sans-serif; }
+#chart, #play { width: 960px; margin:0 auto; }
+					
 .axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
 
 line.tick { stroke: #cccccc; opacity:.4; }
@@ -27,13 +26,14 @@ line.tick { stroke: #cccccc; opacity:.4; }
 .tooltip { position:absoulte; }
 .yearDisplay { font-size: 4.5em; fill: gray; stoke:black; opacity:.2; }
 .y.label { font-size: 13px; }
-.donutLabel { fill:gray; opacity:.8; }
-
+.donutLabel { fill:gray; opacity:.9; }
+.playRect { fill: gray; opacity:.9; }
+.playText { fill:white; font-size: 35px; }
+.playGroup { cursor: pointer; }
 </style>
 </head>
 <body>
-<div id="words">
-<button type="button" onclick="play()">Play</button>
+<div id="play">
 </div>
 <div id="chart">
 </div>
@@ -54,6 +54,40 @@ var	dataChange,
 		latest,
 		data,
 		donut;
+
+var playBox = d3.select('#play').append("svg")
+
+playGroup = playBox.append("g")
+	.attr("class", "playGroup")
+	.attr("transform", "translate(" + (w - 350) + "," + (h/2) + ")")
+
+playGroup.append("rect")
+	.attr("class", "playRect")
+	.attr({
+		width: 250,
+		height: 80,
+		rx: 15,
+		ry:15
+		});
+		
+playGroup.append("text")
+	.attr("class", "playText")
+	.attr("text-anchor", "middle")
+	.attr("dy", 50)
+	.attr("dx", 125)
+	.text("See the visual");
+	
+playGroup.on("click", playStart)
+
+function playStart() { 
+	playBox.transition().duration(300)
+	.style("opacity", "1e-6")
+	.remove()
+	
+	setTimeout(400, play()) 
+};
+
+function play() {
 
 // settings for stacked area chart
 var stacked = d3.select("#chart").append("svg")
@@ -107,7 +141,6 @@ var pie = d3.layout.pie()
 		.sort(null)
 		.value(function(d) { return d.values; });
 
-function play() {
 // bring in the data
 d3.csv("us-historical-energy.csv", function(csv) {	
 	// data variable that will be used throughout
@@ -271,6 +304,7 @@ function drawDonut(section) {
 		.attr("class", "donutPath")
 		.attr("d", arc)
 		.each(function(d) { this._current = d; })
+		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
 		.style("fill", function(d) { return color(d.data.name); })
 
 	// draw percentage labels inside arcs	
@@ -293,6 +327,7 @@ function drawDonut(section) {
 		.text(function(d) { return d3.round(d.data.values, 2) });
 			
 	donutUpdate.transition().select("path").duration(650)
+		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
 		.attrTween("d", arcTween)
 	
 	// display the year for the current data point
