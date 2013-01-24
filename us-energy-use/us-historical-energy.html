@@ -4,33 +4,34 @@
     <title>US Historical Energy Consumption</title>
     <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
-	<!--<script src="http://code.jquery.com/jquery-1.8.3.min.js" type="text/javascript" charset="utf-8"></script>
-	<script src="jquery.tipsy.js" type="text/javascript" charset="utf-8"></script>
-	<link rel="stylesheet" href="http://onehackoranother.com/projects/jquery/tipsy/stylesheets/tipsy.css" type="text/css" title="no title" charset="utf-8"/> -->
-<style type="text/css">
-body { font-size: 11px; font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, "AppleGothic", sans-serif; }
-#chart, #play { width: 960px; margin:0 auto; }
-					
-.axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
+	
+	<style type="text/css">
+	#chart { border: 1px gray; font-size: 11px; font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, "AppleGothic", sans-serif; }
+	#chart, #play { width: 960px; margin:0 auto; }
+						
+	.axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
 
-line.tick { stroke: #cccccc; opacity:.4; }
+	line.tick { stroke: #cccccc; opacity:.4; }
 
-.arc path {
-  stroke: #fff;
-}
+	.arc path {
+	  stroke: #fff;
+	}
 
-.yLabels { stroke: none; font-size: 1em; fill:#191919; }
-.donutAmount { font-size:11px; font-weight: bold; stroke: none; fill:white; opacity:.9}
-.underlay { visibility: hidden; pointer-events:all; }
-.underlay rect { fill:gray; opacity:.3; }
-.tooltip { position:absoulte; }
-.yearDisplay { font-size: 4.5em; fill: gray; stoke:black; opacity:.2; }
-.y.label { font-size: 13px; }
-.donutLabel { fill:gray; opacity:.9; }
-.playRect { fill: gray; opacity:.9; }
-.playText { fill:white; font-size: 35px; }
-.playGroup { cursor: pointer; }
-</style>
+	.yLabels { stroke: none; font-size: 1em; fill:#191919; }
+	.donutAmount { font-size:11px; font-weight: bold; stroke: none; fill:white; opacity:.9}
+	.underlay { visibility: hidden; pointer-events:all; }
+	.underlay rect { fill:gray; opacity:.3; }
+	.tooltip { position:absoulte; }
+	.yearDisplay { font-size: 4.5em; fill: gray; stoke:black; opacity:.2; }
+	.y.label { font-size: 13px; }
+	.donutLabel { fill:gray; }
+	.playRect { fill: gray; opacity:.9; }
+	.playText { fill:white; font-size: 35px; }
+	.playGroup { cursor: pointer; }
+	.endingGroup { cursor: pointer; }
+	.endText { fill:white; font-size: 16px; }
+	.endRect { fill: gray; opacity: .8; }
+	</style>
 </head>
 <body>
 <div id="play">
@@ -162,14 +163,17 @@ d3.csv("us-historical-energy.csv", function(csv) {
 		
 		// reset x domain and recall x axis
 		x.domain([dataChange[0].Year, dataChange[dataChange.length - 1].Year])
-		d3.selectAll(".x.axis").transition(stacked).duration(650).call(xAxis);
+		d3.selectAll(".x.axis").transition(stacked).duration(600).call(xAxis);
 		
 		// call redraw function draws the meat of the charts
 		redraw();
+		} else if (latest === csv.length + 2) {
+			clearInterval(interval);
+			setTimeout(ending, 400);
 		};
 	};
-	// update data every 650ms
-	var interval = setInterval(update, 650);
+	// update data every 600ms
+	var interval = setInterval(update, 600);
 	
 	// create list energy sources to be used as keys
 	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year" && key !== "sourcesPie"; }))
@@ -210,7 +214,7 @@ d3.csv("us-historical-energy.csv", function(csv) {
 		krispy.append("text")
 			.attr("class", "donutLabel")
 			.attr("text-anchor", "end")
-			.attr("x", 50)
+			.attr("x", 45)
 			.attr("y", 20)
 			.attr("dy", ".75em")
 			//.attr("transform", "rotate(-90)")
@@ -246,7 +250,7 @@ function redraw() {
 	// update and transition area values
 	var stacksUpdate = d3.transition(stacks)
 
-	stacksUpdate.transition().select("path").duration(650)
+	stacksUpdate.transition().select("path").duration(600)
 		.attr("d", function(d) { return area(d.values); });
 
 	// create rect underlays that will be used for mouseovers
@@ -266,7 +270,7 @@ function redraw() {
 	// update and move underlays; reduce width to chart width / data length
 	var underlayUpdate = d3.transition(underlay);
 		
-	underlayUpdate.transition().selectAll("rect").duration(650)
+	underlayUpdate.transition().selectAll("rect").duration(600)
 		.attr("x", function(d, i) { return x(d.Year) - underlayWidth/2; })
 		.attr("width", underlayWidth);
 
@@ -320,13 +324,13 @@ function drawDonut(section) {
 	// update and transition arcs and labels	
 	var donutUpdate = d3.transition(donut);
 		
-	donutUpdate.transition().select(".donutAmount").duration(650)
+	donutUpdate.transition().select(".donutAmount").duration(600)
 		.attr("transform", function(d) {
 			return "translate(" + arc.centroid(d) + ")rotate(" + angle(d) + ")"; }) 
 		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
 		.text(function(d) { return d3.round(d.data.values, 2) });
 			
-	donutUpdate.transition().select("path").duration(650)
+	donutUpdate.transition().select("path").duration(600)
 		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
 		.attrTween("d", arcTween)
 	
@@ -385,9 +389,39 @@ $('.stackWrapper').hover(function() {
 		clearInterval(interval);
 		},
 		function() {
-		 interval = setInterval(update, 650);
+		 interval = setInterval(update, 600);
 		});
 });
+
+function ending() {
+
+	endingGroup = krispy.append("g")
+		.attr("class", "endingGroup")
+		.attr("transform", "translate(90,120)")
+		
+	endingGroup.append("rect")
+		.attr("class", "endRect")
+		.attr({
+			width: 70,
+			height: 30,
+			rx: 10,
+			ry:10
+			});
+			
+	endingGroup.append("text")
+		.attr("class", "endText")
+		.attr("text-anchor", "middle")
+		.attr("dy", 21)
+		.attr("dx", 35)
+		.text("Again?");
+
+	endingGroup.on("click", playAgain)
+	 }
+
+function playAgain() {
+		d3.selectAll("svg").transition().duration(600).style("opacity", "1e-6").remove()
+		setTimeout(play, 650)
+	};
 };
 </script>
 </body>
