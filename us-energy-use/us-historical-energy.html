@@ -13,9 +13,7 @@
 
 	line.tick { stroke: #cccccc; opacity:.4; }
 
-	.arc path {
-	  stroke: #fff;
-	}
+	.arc path { stroke: #fff; }
 
 	.yLabels { stroke: none; font-size: 1em; fill:#191919; }
 	.donutAmount { font-size:11px; font-weight: bold; stroke: none; fill:white; opacity:.9}
@@ -56,6 +54,7 @@ var	dataChange,
 		data,
 		donut;
 
+// SVG rect that will be used as button to start animation
 var playBox = d3.select('#play').append("svg")
 
 playGroup = playBox.append("g")
@@ -77,7 +76,8 @@ playGroup.append("text")
 	.attr("dy", 50)
 	.attr("dx", 125)
 	.text("See the visual");
-	
+
+// start the animation on click	
 playGroup.on("click", playStart)
 
 function playStart() { 
@@ -88,6 +88,7 @@ function playStart() {
 	setTimeout(400, play()) 
 };
 
+// function to animate
 function play() {
 
 // settings for stacked area chart
@@ -95,7 +96,7 @@ var stacked = d3.select("#chart").append("svg")
 		.attr("class", "stackWrapper")
 		.attr("width", w1 + margin.l + margin.r)
 		.attr("height", h + margin.t + margin.b)
-  .append("g")
+	.append("g")
 		.attr("transform", "translate(" + margin.l + "," + margin.t + ")");
 
 var xAxis = d3.svg.axis()
@@ -103,9 +104,10 @@ var xAxis = d3.svg.axis()
 		.tickSubdivide(true)
 		.orient("bottom");
 	stacked.append("g")
-	.attr("class", "x axis")
-	.attr("transform", "translate(0," + h + ")")
-		
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + h + ")")
+
+// setup and bring in y axis		
 var yAxis = d3.svg.axis()
 		.scale(y)
 		.tickSubdivide(true)
@@ -161,12 +163,14 @@ d3.csv("us-historical-energy.csv", function(csv) {
 		latest++;
 		if (latest < csv.length + 2) {
 		
-		// reset x domain and recall x axis
+		// reset x domain and re-call() x axis
 		x.domain([dataChange[0].Year, dataChange[dataChange.length - 1].Year])
 		d3.selectAll(".x.axis").transition(stacked).duration(600).call(xAxis);
 		
 		// call redraw function draws the meat of the charts
 		redraw();
+		
+		// stop updating and bring "play again" button when animation is done
 		} else if (latest === csv.length + 2) {
 			clearInterval(interval);
 			setTimeout(ending, 400);
@@ -175,7 +179,7 @@ d3.csv("us-historical-energy.csv", function(csv) {
 	// update data every 600ms
 	var interval = setInterval(update, 600);
 	
-	// create list energy sources to be used as keys
+	// create list of energy sources to be used as keys
 	color.domain(d3.keys(data[0]).filter(function(key) { return key !== "Year" && key !== "sourcesPie"; }))
 	var stackGroup = stacked.append("g").attr("class", "stackGroup")
 	var underlayGroup = stacked.append("g").attr("class", "underlayGroup")
@@ -211,13 +215,13 @@ d3.csv("us-historical-energy.csv", function(csv) {
 			.attr("transform", "rotate(-90)")
 			.text("Quadrillion BTUs (Quads)");
 		
+		// label units on donut
 		krispy.append("text")
 			.attr("class", "donutLabel")
 			.attr("text-anchor", "end")
 			.attr("x", 45)
 			.attr("y", 20)
 			.attr("dy", ".75em")
-			//.attr("transform", "rotate(-90)")
 			.text("(Values in Quads)");
 
 // draw the charts in redraw function		
@@ -257,7 +261,7 @@ function redraw() {
 	var underlay = underlayGroup.selectAll(".underlay").data(dataChange);
 	var underlayWidth = w1/dataChange.length;
 
-	// enter() underlay g and append rects
+	// enter() underlay group and append rects
 	var underlayEnter = underlay.enter().append("g")
 		.attr("class", "underlay");
 
@@ -267,7 +271,7 @@ function redraw() {
 		.attr("y", 0)
 		.attr("height", h);
 		
-	// update and move underlays; reduce width to chart width / data length
+	// update and move underlays; auto-reduce width to chart width / data length
 	var underlayUpdate = d3.transition(underlay);
 		
 	underlayUpdate.transition().selectAll("rect").duration(600)
@@ -282,7 +286,7 @@ function redraw() {
 	drawDonut(dataChange);
 };
 
-// function for drawing the donut
+// function for drawing and updating the non-mouseover donut
 function drawDonut(section) { 
 
 	// map values to color.domain key
@@ -299,11 +303,11 @@ function drawDonut(section) {
 	var donut = krispy.selectAll(".arc")
 		.data(pie(data[newIndex].sourcesPie))
 
-	// enter() the donut "g"
+	// enter() the donut group
 	var donutEnter = donut.enter().append("g")
 		.attr("class", "arc")
 		
-		// draw donut arcs
+	// draw donut arcs
 	donutEnter.append("path")
 		.attr("class", "donutPath")
 		.attr("d", arc)
@@ -311,7 +315,7 @@ function drawDonut(section) {
 		.style("fill-opacity", function(d) {return d.value==0 ? 1e-6 : 1;})
 		.style("fill", function(d) { return color(d.data.name); })
 
-	// draw percentage labels inside arcs	
+	// draw value labels inside arcs	
 	donutEnter.append("text")
 		.attr("class", "donutAmount")
 		.attr("transform", function(d) {
@@ -351,7 +355,8 @@ function drawDonut(section) {
 		var a = (d.startAngle + d.endAngle) * 90 / Math.PI - 90;
 		return a > 90 ? a - 180 : a;
 	}
-		
+	
+	// for smoothly updating arcs
 	function arcTween(a) {
 		var i = d3.interpolate(this._current, a);
 		this._current = i(0);
@@ -393,6 +398,7 @@ $('.stackWrapper').hover(function() {
 		});
 });
 
+// what happens when animation reaches the end
 function ending() {
 
 	endingGroup = krispy.append("g")
@@ -418,6 +424,7 @@ function ending() {
 	endingGroup.on("click", playAgain)
 	 }
 
+// Play it Again, Sam
 function playAgain() {
 		d3.selectAll("svg").transition().duration(600).style("opacity", "1e-6").remove()
 		setTimeout(play, 650)
