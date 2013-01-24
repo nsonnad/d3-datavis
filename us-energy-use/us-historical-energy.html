@@ -6,34 +6,36 @@
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
 	
 	<style type="text/css">
-	#chart { border: 1px gray; font-size: 11px; font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, "AppleGothic", sans-serif; }
-	#chart, #play { width: 960px; margin:0 auto; }
-						
-	.axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
-
-	line.tick { stroke: #cccccc; opacity:.4; }
-
-	.arc path { stroke: #fff; }
-
-	.yLabels { stroke: none; font-size: 1em; fill:#191919; }
-	.donutAmount { font-size:11px; font-weight: bold; stroke: none; fill:white; opacity:.9}
-	.underlay { visibility: hidden; pointer-events:all; }
-	.underlay rect { fill:gray; opacity:.3; }
-	.tooltip { position:absoulte; }
-	.yearDisplay { font-size: 4.5em; fill: gray; stoke:black; opacity:.2; }
-	.y.label { font-size: 13px; }
-	.donutLabel { fill:gray; }
+	#chart { border: 1px gray; font-size: 11px;
+			 font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, "AppleGothic", sans-serif; }
+	#chart, #play { width: 960px; margin:0 auto; }	
+	
 	.playRect { fill: gray; opacity:.9; }
 	.playText { fill:white; font-size: 35px; }
 	.playGroup { cursor: pointer; }
+						
+	.axis path, line { stroke: #000; fill:none; shape-rendering: crispEdges;}
+	line.tick { stroke: #cccccc; opacity:.4; }
+	.arc path { stroke: #fff; }
+	.y.label { font-size: 13px; }
+	
+	.donutAmount { font-size:11px; font-weight: bold; stroke: none; fill:white; opacity:.9}
+	.donutLabel { fill:gray; }
+	.yearDisplay { font-size: 4.5em; fill: gray; stoke:black; opacity:.2; }
+	
+	.underlay { visibility: hidden; pointer-events:all; }
+	.underlay rect { fill:gray; opacity:.3; }
+	
 	.endingGroup { cursor: pointer; }
 	.endText { fill:white; font-size: 16px; }
 	.endRect { fill: gray; opacity: .8; }
 	</style>
 </head>
+
 <body>
 <div id="play">
 </div>
+
 <div id="chart">
 </div>
 
@@ -44,8 +46,11 @@ var margin = {t:20, r:20, b:20, l:30 },
 		w1 = 620 - margin.l - margin.r,
 		w2 = 300 - margin.r,
 		h = 350 - margin.t - margin.b,
+		// clamp x scale because there is more data available than we want
+		// to show as animation is running
 		x = d3.time.scale().range([0, w1]).clamp(true),
 		y = d3.scale.linear().range([h, 0]).domain([0, 110]),
+		// custom color scale
 		color = d3.scale.ordinal().range(["#37A36A", "#3A5A64", "#DABD49", "#C78739", "#8AB8D9", "#A81F5E"]),
 		formatTime = d3.time.format("%Y").parse;
 
@@ -88,7 +93,6 @@ function playStart() {
 	setTimeout(400, play()) 
 };
 
-// function to animate
 function play() {
 
 // settings for stacked area chart
