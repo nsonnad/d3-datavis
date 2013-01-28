@@ -61,6 +61,8 @@ var	dataChange,
 
 // SVG rect that will be used as button to start animation
 var playBox = d3.select('#play').append("svg")
+    .attr("width", w)
+    .attr("height", h)
 
 playGroup = playBox.append("g")
 	.attr("class", "playGroup")
@@ -79,7 +81,7 @@ playGroup.append("text")
 	.attr("class", "playText")
 	.attr("text-anchor", "middle")
 	.attr("dy", 50)
-	.attr("dx", 125)
+	.attr("x", 125)
 	.text("See the visual");
 
 // start the animation on click	
