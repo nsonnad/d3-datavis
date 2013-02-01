@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://raw.github.com/mbostock/d3/master/d3.js"></script>
+    
+<style type="text/css">
+ .links { margin: 15px 25px 0px 10px; width: 200px; float:left;}
+ .links a { text-decoration:none; color: #7B7B7B; }
+ .links a:active { text-decoration: underline; }
+ 
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #7B7B7B;
+    shape-rendering: crispEdges;
+  }
+  
+  #wrapper  { width: 960px; }
+  #newsWrap, #censusWrap { width: 960px; }
+  #news, #census { width:600px; font: 10px sans-serif; float:left; }
+  #controls { width: 200px; float:left; margin-right:20px;}
+  
+</style>
+</head>
+  
+<body>
+<div id="wrapper">
+ <div id="newsWrap">
+  <div class="links">
+    Newsroom data for:<br />
+    <span class="link"><a class="n2000" href="javascript:drawNews(1999)">1999</a></span>
+    <span class="link"><a class="n2000" href="javascript:drawNews(2000)">2000</a></span>
+    <span class="link"><a class="n2000" href="javascript:drawNews(2001)">2001</a></span>
+    <span class="link"><a class="n2000" href="javascript:drawNews(2002)">2002</a></span>
+    <span class="link"><a class="n2000" href="javascript:drawNews(2003)">2003</a></span>
+    <span class="link"><a class="n2000" href="javascript:drawNews(2004)">2004</a></span>
+    <span class="link"><a class="n2000" href="javascript:drawNews(2005)">2005</a></span>
+    <span class="link"><a class="n2005" href="javascript:drawNews(2006)">2006</a></span>
+    <span class="link"><a class="n2005" href="javascript:drawNews(2007)">2007</a></span>
+    <span class="link"><a class="n2005" href="javascript:drawNews(2008)">2008</a></span>
+    <span class="link"><a class="n2005" href="javascript:drawNews(2009)">2009</a></span>
+    <span class="link"><a class="n2010" href="javascript:drawNews(2010)">2010</a></span>
+    <span class="link"><a class="n2010" href="javascript:drawNews(2011)">2011</a></span>
+    <span class="link"><a class="n2010" href="javascript:drawNews(2012)">2012</a></span>
+  </div>
+  <div id="news"></div>
+</div>
+
+<div id="censusWrap"></div>
+  <div class="links">
+    Compare to US census from:<br />
+    <span class="link"><a class="c2000" href="javascript:drawCensus(2000)">2000</a></span>
+    <span class="link"><a class="c2010" href="javascript:drawCensus(2010)">2010</a></span>
+  </div>
+  <div id="census"></div>
+</div>
+<script type="text/javascript">
+  var margin = {t:30, r:20, b:30, l:20},
+      w = 600 - margin.l - margin.r,
+      h = 180 - margin.t - margin.b;
+
+  var diversity,
+      census;
+      
+  var x = d3.scale.linear().rangeRound([0, w]),
+      y = d3.scale.linear().rangeRound([h, 0]).domain([0, 100]),
+      color = d3.scale.ordinal().range(
+      ["#3FA4B8", "#FA3F2F", "#9DC2B5", "#D98673", "#7DAB64", "#8B6FBF"]);
+  
+ var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("top")
+    .tickFormat(d3.format(".0%"))
+    .tickSubdivide(1)
+    .tickSize(6, 3, 0);
+    
+  var yAxis = d3.svg.axis()
+    .scale(y);
+    //.orient("left")
+    //.tickFormat(d3.format(".0%"));
+
+var stackNews = d3.select("#news").append("svg")
+    .attr("width", w + margin.l + margin.r)
+    .attr("height", h/2 + margin.t + margin.b)
+
+var stackCensus = d3.select("#census").append("svg")
+    .attr("width", w + margin.l + margin.r)
+    .attr("height", h/2 + margin.t + margin.b)
+    
+var stackedNews =  stackNews.append("g")
+    .attr("width", w)
+    .attr("height", h/2)
+    .attr("transform", "translate(" + margin.l + "," + margin.t + ")");
+
+var stackedCensus = stackCensus.append("g")
+    .attr("width", w)
+    .attr("height", h/2)
+    .attr("transform", "translate(" + margin.l + "," + margin.t + ")");
+
+stackedNews.append("g")
+  .attr("class", "x axis")
+  .call(xAxis);
+  
+stackedCensus.append("g")
+  .attr("class", "x axis")
+  .call(xAxis);
+
+d3.tsv("newsroom-diversity.csv", function(data1) { 
+  d3.csv("total-2010.csv", function(data2) {
+    
+  data1.forEach(function(d) {
+    d.Men = +d.Men;
+    d.Women = +d.Women;
+    d.Total = +d.Total;
+    d.Year = +d.Year;
+  });
+ 
+  diversity = data1;
+  census = data2;
+  });
+});
+  
+function drawNews(year) {
+
+  var currYear = diversity.filter(function(d) { return d.Year === year; })
+
+  var x0 = 0;
+  currYear.race = currYear.map(function(d) { return {name: d.Race, x0: x0, x1: x0 += d.Total, men: (d.Men/d.Total)*100, women: (d.Women/d.Total)*100 }; })
+  currYear.race.forEach(function(d) { d.x0 /= x0; d.x1 /= x0; });
+
+  newsRects(currYear.race);
+};
+
+function newsRects(data) {  
+  console.log(data) 
+  
+var rects = stackedNews.selectAll(".rectRace")
+    .data(data)
+
+rectsEnter = rects.enter().append("g")
+
+rectsEnter.append("rect")
+    .attr("class", "rectRace")
+    .attr("width", function(d) { return x(d.x1) - x(d.x0); })
+    .attr("y", 1)
+    .attr("x", function(d) { return x(d.x0); })
+    .attr("height", h/2)
+    .style("fill", function(d) { return color(d.name); });
+    
+ d3.selectAll(".rectRace").transition().duration(400)
+    .attr("width", function(d) { return x(d.x1) - x(d.x0); })
+    .attr("x", function(d) { return x(d.x0); });
+  
+  };
+
+function drawCensus(year) {
+
+  var censusYear = census.filter(function(d) { return +d.Year === year; })
+  
+  color.domain(d3.keys(censusYear[0]).filter(function(key) { return key !== "Year" && key !== "Totals"; }));
+  
+  censusYear.map(function(d) {
+     var x0 = 0;
+     d.Totals = color.domain().map(function(name) { return {name: name, x0: x0, x1: x0 += +d[name]}; })
+     d.Totals.forEach(function(d) { d.x0 /= x0; d.x1 /= x0; });
+    })
+    
+  censusRects(censusYear[0].Totals);
+};
+
+function censusRects(data) {  
+  
+var rects = stackedCensus.selectAll(".rectCensus")
+    .data(data)
+
+rectsEnter = rects.enter().append("g")
+
+rectsEnter.append("rect")
+    .attr("class", "rectCensus")
+    .attr("width", function(d) { return x(d.x1) - x(d.x0); })
+    .attr("y", 1)
+    .attr("x", function(d) { return x(d.x0); })
+    .attr("height", h/2)
+    .style("fill", function(d) { return color(d.name); });
+    
+ d3.selectAll(".rectCensus").transition().duration(400)
+    .attr("width", function(d) { return x(d.x1) - x(d.x0); })
+    .attr("x", function(d) { return x(d.x0); });
+  
+  };
+
+</script>
+</div>
+</body>
+
+</html>
