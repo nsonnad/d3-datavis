@@ -65,7 +65,7 @@
   
 </div>
 <script type="text/javascript">
-  var margin = {t:30, r:40, b:30, l:20},
+  var margin = {t:30, r:50, b:30, l:20},
       w = 620 - margin.l - margin.r,
       h = 180 - margin.t - margin.b,
       formatPercent = d3.format(".2p");
@@ -87,8 +87,6 @@
     
   var yAxis = d3.svg.axis()
     .scale(y);
-    //.orient("left")
-    //.tickFormat(d3.format(".0%"));
 
 var stackNews = d3.select("#news").append("svg")
     .attr("width", w + margin.l + margin.r)
@@ -246,7 +244,6 @@ rectsEnter.append("rect")
 
 rectsEnter.append("text")
     .attr("class", function(d) { return "text" + d.name.replace(/\s/g, ''); })
-    //.attr("class", "censusText")
     .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + (h/2 + 15) + ")"; })
     .style("visibility", "hidden")
     .text(function(d) { return d.name + " - " + formatPercent(d.x1 - d.x0); })
