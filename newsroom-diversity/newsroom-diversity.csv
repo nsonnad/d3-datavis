@@ -1,4 +1,4 @@
-Year	Race	Men	Women	Total		
+Year	Race	Men	Women	Total															
 2012	White	22906	12678	35584															
 2011	White	23416	15360	38776															
 2010	White	23249	12711	35960															
@@ -12,21 +12,21 @@ Year	Race	Men	Women	Total
 2002	White	30677	17170	47847															
 2001	White	31776	18054	49830															
 2000	White	31793	17781	49574															
-1999	White	31335	17407	48742														
-2012	Black	993	893	1886															
-2011	Black	1005	943	1948														 	 
-2010	Black	1084	945	2029														 	 
-2009	Black	1231	1181	2412														 	 
-2008	Black	1403	1387	2790														 	 
-2007	Black	1463	1437	2900														 	 
-2006	Black	1501	1448	2949														 	 
-2005	Black	1523	1464	2987														 	 
-2004	Black	1512	1426	2938														 	 
-2003	Black	1495	1424	2919														 	 
-2002	Black	1497	1381	2878														 	 
-2001	Black	1535	1415	2950														 	 
-2000	Black	1519	1465	2984														 	 
-1999	Black	1533	1420	2953														 	 
+1999	White	31335	17407	48742															
+2012	Native American	81	51	132															
+2011	Native American	111	87	198														 	 
+2010	Native American	121	78	199														 	 
+2009	Native American	199	94	293														 	 
+2008	Native American	159	125	284														 	 
+2007	Native American	170	155	325														 	 
+2006	Native American	163	141	304														 	 
+2005	Native American	164	131	295														 	 
+2004	Native American	163	150	313														 	 
+2003	Native American	153	136	289														 	 
+2002	Native American	195	112	307														 	 
+2001	Native American	140	109	249														 	 
+2000	Native American	144	149	293														 	 
+1999	Native American	143	98	241														 	 
 2012	Hispanic	969	681	1650															
 2011	Hispanic	1128	760	1888															
 2010	Hispanic	1167	745	1912															
@@ -55,18 +55,17 @@ Year	Race	Men	Women	Total
 2001	Asian	652	647	1299															
 2000	Asian	670	651	1321															
 1999	Asian	630	634	1264															
-2012	Native American	81	51	132															
-2011	Native American	111	87	198															
-2010	Native American	121	78	199															
-2009	Native American	199	94	293															
-2008	Native American	159	125	284															
-2007	Native American	170	155	325															
-2006	Native American	163	141	304															
-2005	Native American	164	131	295															
-2004	Native American	163	150	313															
-2003	Native American	153	136	289															
-2002	Native American	195	112	307															
-2001	Native American	140	109	249															
-2000	Native American	144	149	293															
-1999	Native American	143	98	241															
-											
+2012	Black	993	893	1886															
+2011	Black	1005	943	1948															
+2010	Black	1084	945	2029															
+2009	Black	1231	1181	2412															
+2008	Black	1403	1387	2790															
+2007	Black	1463	1437	2900															
+2006	Black	1501	1448	2949															
+2005	Black	1523	1464	2987															
+2004	Black	1512	1426	2938															
+2003	Black	1495	1424	2919															
+2002	Black	1497	1381	2878															
+2001	Black	1535	1415	2950															
+2000	Black	1519	1465	2984															
+1999	Black	1533	1420	2953															
