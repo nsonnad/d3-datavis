@@ -7,7 +7,8 @@
 <style type="text/css">
  .links { margin: 15px 25px 0px 10px; width: 150px; float:left;}
  .links a { text-decoration:none; color: #7B7B7B; }
-  
+ .links a:hover { text-decoration:underline; }
+ 
  span.link { cursor: pointer; }
  span.linkCensus { display:block; }
  
@@ -64,7 +65,7 @@
   
 </div>
 <script type="text/javascript">
-  var margin = {t:30, r:50, b:30, l:20},
+  var margin = {t:30, r:40, b:30, l:20},
       w = 620 - margin.l - margin.r,
       h = 180 - margin.t - margin.b,
       formatPercent = d3.format(".2p");
