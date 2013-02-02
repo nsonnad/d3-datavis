@@ -9,7 +9,7 @@
  .links a { text-decoration:none; color: #7B7B7B; }
  .links a:hover { text-decoration:underline; }
  
- span.link { cursor: pointer; }
+ span.link { cursor: pointer; font-size:14px;}
  span.linkCensus { display:block; }
  
   .axis path,
@@ -20,10 +20,10 @@
   }
   
   #wrapper  { width: 960px; }
-  #newsWrap, #censusWrap { width: 960px; }
+  #newsWrap, #censusWrap { width: 960px; float:left;}
   #news, #census { width:620px; font: 10px sans-serif; float:left; }
-  #controls { width: 180px; float:left; margin-right:20px;}
-  #legend { width: 150px; float:right; margin-top:20px; font: 12px sans-serif; }
+  #controls { width: 190px; float:left; margin-right:20px; }
+  #legend { width: 140px; float:right; margin-top:20px; font: 12px sans-serif; }
   .active a { color: #fa3f2f; text-decoration:underline; }
   
 </style>
@@ -33,7 +33,7 @@
 <div id="wrapper">
  <div id="newsWrap">
   <div class="links">
-    Newsroom data for:<br />
+    <span style="font-size:16px;">Newsroom data:</span><br />
     <span class="link linkNews"><a onclick="javascript:drawNews(1999)">1999</a></span>
     <span class="link linkNews"><a onclick="javascript:drawNews(2000)">2000</a></span>
     <span class="link linkNews"><a onclick="javascript:drawNews(2001)">2001</a></span>
@@ -50,11 +50,12 @@
     <span class="link linkNews active"><a onclick="javascript:drawNews(2012)">2012</a></span>
   </div>
   <div id="news"></div>
+  <div id="legend"></div>
 </div>
-<div id="legend"></div>
+
 <div id="censusWrap"></div>
   <div class="links">
-    Compare to:<br />
+    <span style="font-size:16px;">Compare to:</span><br />
     <span class="link linkCensus"><a onclick="javascript:drawCensus('c2000')">2000 US Census</a></span>
     <span class="link linkCensus active"><a onclick="javascript:drawCensus('c2010')">2010 US Census</a></span>
     <span class="link linkCensus"><a onclick="javascript:drawCensus('nyc')">New York City (2010)</a></span>
@@ -128,6 +129,8 @@ d3.tsv("newsroom-diversity.csv", function(data1) {
  console.log(races)
  
  var legend = d3.select("#legend").append("svg")
+      .attr("width", 150)
+      .attr("height", h/2 + 70);
 
 	var legends = legend.selectAll(".legend")
 			.data(races)
